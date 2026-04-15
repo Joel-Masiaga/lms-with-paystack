@@ -105,8 +105,20 @@ def send_verification_email(request, user, email_verification):
         otp = email_verification.generate_otp()
         uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
         confirm_path = reverse('verify_email_confirm', kwargs={'uidb64': uidb64, 'token': otp})
-        direct_verify_url = request.build_absolute_uri(confirm_path)
-        verify_url = request.build_absolute_uri('/verify-email/')
+
+        # Build absolute URIs, forcing HTTPS for proxied environments like Render
+        # SITE_URL env var is the most reliable source; fallback to request object.
+        site_url = getattr(settings, 'SITE_URL', '').rstrip('/')
+        if site_url:
+            direct_verify_url = f"{site_url}{confirm_path}"
+            verify_url = f"{site_url}/verify-email/"
+        else:
+            direct_verify_url = request.build_absolute_uri(confirm_path)
+            verify_url = request.build_absolute_uri('/verify-email/')
+
+        # Ensure https:// is used — Render terminates SSL at the load balancer
+        direct_verify_url = direct_verify_url.replace('http://', 'https://', 1)
+        verify_url = verify_url.replace('http://', 'https://', 1)
 
         subject = 'Verify Your Email Address - Kuza Ndoto Academy'
         message = f"""
