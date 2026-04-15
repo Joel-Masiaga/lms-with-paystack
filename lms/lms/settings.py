@@ -441,3 +441,12 @@ EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'masiagajoel001@gmail.com')
+
+
+# Tell Django that it's safe to accept POST requests (like logins) from your Render URL
+CSRF_TRUSTED_ORIGINS = [
+    'https://www.lms-with-paystack.onrender.com','https://lms-with-paystack.onrender.com', 'https://www.kuzandotoacademy.com', 'https://kuzandotoacademy.com'
+]
+
+# Since Render handles HTTPS at the load balancer, tell Django to respect the proxy headers
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
