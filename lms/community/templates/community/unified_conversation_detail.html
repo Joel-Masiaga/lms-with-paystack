@@ -54,9 +54,9 @@
                     </div>
 
                     <!-- Conversation Info -->
-                    <div class="flex-1 min-w-0">
+                    <div class="flex-1 min-w-0 pr-1 sm:pr-2">
                         <div class="flex items-center justify-between gap-2">
-                            <h3 class="font-semibold text-gray-900 dark:text-white truncate text-sm sm:text-base">
+                            <h3 class="font-semibold text-gray-900 dark:text-white truncate text-sm sm:text-base flex-1 min-w-0">
                                 {% if conv.type == 'direct' %}
                                     {{ conv.name|default:"User" }}
                                 {% else %}
@@ -615,10 +615,11 @@
 </div>
 
 <style>
-    /* Hide the chatbot toggle in chat view to prevent overlap with message input */
+    /* Hide the chatbot toggle globally on small screens and entirely in chat view */
     #chatbotToggle, #chatbotBox {
         display: none !important;
     }
+
 
     /* Chat list animations */
     @keyframes slideIn {

@@ -237,10 +237,10 @@
             <h2 class="text-base sm:text-lg font-semibold mb-1 sm:mb-2">Ready to expand your network?</h2>
             <p class="text-xs sm:text-sm text-gray-100 mb-3 sm:mb-4">Start connecting with peers who share your passion for learning today.</p>
             <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center">
-                <a href="{% url 'user_directory' %}" class="inline-flex items-center justify-center px-3 sm:px-6 py-2 sm:py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition font-semibold text-xs sm:text-sm">
+                <a href="{% url 'user_directory' %}" class="w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-6 py-2 sm:py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition font-semibold text-xs sm:text-sm">
                     <i class="fas fa-user-plus mr-1 sm:mr-2 text-xs sm:text-base"></i><span class="hidden sm:inline">Find People</span><span class="sm:hidden">People</span>
                 </a>
-                <a href="{% url 'group_discovery' %}" class="inline-flex items-center justify-center px-3 sm:px-6 py-2 sm:py-3 bg-white hover:bg-gray-100 text-primary dark:text-primary rounded-lg transition font-semibold text-xs sm:text-sm">
+                <a href="{% url 'group_discovery' %}" class="w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-6 py-2 sm:py-3 bg-white hover:bg-gray-100 text-primary dark:text-primary rounded-lg transition font-semibold text-xs sm:text-sm">
                     <i class="fas fa-search mr-1 sm:mr-2 text-xs sm:text-base"></i><span class="hidden sm:inline">Explore Groups</span><span class="sm:hidden">Groups</span>
                 </a>
             </div>
@@ -253,6 +253,12 @@
     @media (prefers-reduced-motion: no-preference) {
         a.group > div {
             transition: all 0.3s ease;
+        }
+    }
+    
+    @media (max-width: 640px) {
+        #chatbotToggle, #chatbotBox {
+            display: none !important;
         }
     }
 </style>

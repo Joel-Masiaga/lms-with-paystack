@@ -9,9 +9,9 @@
     <div class="max-w-6xl mx-auto h-full flex flex-col">
         <!-- Header -->
         <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-3 sm:px-6 py-3 sm:py-4 sticky top-0 z-10">
-            <div class="flex items-center justify-between mb-3 sm:mb-4">
-                <div>
-                    <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3 sm:mb-4">
+                <div class="flex-1 min-w-0">
+                    <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white truncate">
                         <i class="fas fa-comments text-primary mr-1 sm:mr-2"></i>Messages
                     </h1>
                     <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -24,7 +24,7 @@
                         {% endif %}
                     </p>
                 </div>
-                <div class="flex gap-1 sm:gap-2">
+                <div class="flex gap-1 sm:gap-2 flex-shrink-0">
                     <a href="{% url 'user_directory' %}" class="px-3 sm:px-4 py-2 sm:py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
                         <i class="fas fa-plus text-xs sm:text-base"></i><span class="hidden sm:inline">New Chat</span><span class="sm:hidden">New</span>
                     </a>
@@ -32,9 +32,9 @@
             </div>
             
             <!-- Search -->
-            <div class="relative">
-                <input type="search" placeholder="Search messages..." class="w-full px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
-                <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs sm:text-base"></i>
+            <div class="relative w-full mt-1">
+                <input type="search" placeholder="Search messages..." class="w-full pl-3 pr-10 py-2 sm:px-4 text-xs sm:text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs sm:text-base pointer-events-none"></i>
             </div>
         </div>
 
@@ -176,6 +176,12 @@
     
     .divide-y > * {
         animation: slideIn 0.3s ease-out;
+    }
+    
+    @media (max-width: 640px) {
+        #chatbotToggle, #chatbotBox {
+            display: none !important;
+        }
     }
 </style>
 {% endblock %}

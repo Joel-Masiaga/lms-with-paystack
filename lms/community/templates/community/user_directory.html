@@ -60,15 +60,15 @@
 
         <!-- Users Grid -->
         {% if users %}
-        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {% for user in users %}
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition overflow-hidden group">
                 <!-- User Card Header (with gradient background) -->
                 <div class="h-24 bg-gradient-to-r from-primary to-primary-dark relative"></div>
                 
                 <!-- Avatar (overlapping header) -->
-                <div class="px-6 pb-4">
-                    <div class="flex flex-col items-center -mt-16 mb-4">
+                <div class="px-4 pb-4">
+                    <div class="flex flex-col items-center -mt-16 mb-3">
                         {% if user.profile.image and user.profile.image.url != '/media/default.jpg' %}
                         <img src="{{ user.profile.image.url }}" alt="{{ user.get_full_name }}" class="w-20 h-20 rounded-full object-cover border-4 border-white dark:border-gray-800 shadow-md">
                         {% else %}
@@ -112,7 +112,7 @@
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="flex gap-2">
+                    <div class="flex flex-col sm:flex-row gap-2">
                         {% if user.id in chatting_with_ids %}
                         <!-- Already chatting -->
                         <a href="{% url 'unified_conversation' %}?type=direct&user_id={{ user.id }}" class="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition text-center font-medium text-sm">
@@ -126,8 +126,8 @@
                         {% endif %}
                         
                         <!-- View Profile -->
-                        <button class="px-4 py-2 border border-primary text-primary rounded-lg hover:bg-primary/10 transition text-sm font-medium">
-                            <i class="fas fa-user"></i>
+                        <button class="flex-none sm:flex-1 px-4 py-2 border border-primary text-primary rounded-lg hover:bg-primary/10 transition text-sm font-medium flex-shrink-0">
+                            <i class="fas fa-user"></i><span class="sm:hidden ml-2">View Profile</span>
                         </button>
                     </div>
                 </div>
@@ -170,4 +170,12 @@
         </div>
     </div>
 </div>
+
+<style>
+    @media (max-width: 640px) {
+        #chatbotToggle, #chatbotBox {
+            display: none !important;
+        }
+    }
+</style>
 {% endblock %}
