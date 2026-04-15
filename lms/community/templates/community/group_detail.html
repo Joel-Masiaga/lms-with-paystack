@@ -1,0 +1,430 @@
+{% extends 'home/base.html' %}
+{% load static %}
+{% load user_display_filters %}
+
+{% block title %}{{ group.name }}{% endblock %}
+
+{% block content %}
+<div class="flex-1 overflow-hidden flex bg-white dark:bg-gray-900">
+    <!-- Mobile Sidebar Toggle Button -->
+    <button id="mobile-sidebar-toggle" class="md:hidden fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full bg-primary hover:bg-primary-dark text-white shadow-lg transition-all flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800">
+        <i class="fas fa-bars text-xl"></i>
+    </button>
+
+    <!-- Left Sidebar - Groups List (Desktop) / Mobile Drawer -->
+    <div id="mobile-sidebar" class="fixed inset-0 md:static z-20 hidden md:flex md:flex-col md:w-80 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+        <!-- Close button for mobile -->
+        <button id="mobile-sidebar-close" class="md:hidden absolute top-4 right-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition">
+            <i class="fas fa-times text-xl text-gray-700 dark:text-gray-300"></i>
+        </button>
+
+        <!-- Sidebar Header -->
+        <div class="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">My Groups</h2>
+            <a href="{% url 'group_discovery' %}" class="w-full px-3 py-2 bg-primary text-white rounded-full hover:bg-primary-dark transition font-medium text-xs sm:text-sm text-center block">
+                <i class="fas fa-search mr-2"></i>Discover Groups
+            </a>
+        </div>
+
+        <!-- Groups List -->
+        <div class="flex-1 overflow-y-auto">
+            {% if groups_sidebar %}
+                {% for group_item in groups_sidebar %}
+                <a href="{% url 'unified_conversation' %}?type=group&group_id={{ group_item.group.id }}" class="flex items-center gap-3 p-2 sm:p-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition {% if group_item.is_active %}bg-primary/10 dark:bg-primary/20 border-l-4 border-primary{% endif %}">
+                    <!-- Group Avatar -->
+                    <div class="w-10 sm:w-12 h-10 sm:h-12 rounded-lg bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white font-bold text-xs sm:text-sm flex-shrink-0">
+                        {{ group_item.group.name|first|upper }}
+                    </div>
+
+                    <!-- Group Info -->
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-semibold text-xs sm:text-sm text-gray-900 dark:text-white truncate">{{ group_item.group.name }}</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                            <i class="fas fa-users mr-1"></i>{{ group_item.member_count }}
+                        </p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                            <i class="fas fa-comments mr-1"></i>{{ group_item.message_count }}
+                        </p>
+                    </div>
+                </a>
+                {% endfor %}
+            {% else %}
+            <div class="flex items-center justify-center h-full text-center p-3 sm:p-4">
+                <div>
+                    <i class="fas fa-users text-3xl sm:text-4xl text-gray-300 dark:text-gray-600 mb-2 sm:mb-3 block"></i>
+                    <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">No groups yet</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div id="mobile-sidebar-overlay" class="fixed inset-0 z-10 hidden bg-black/50 md:hidden"></div>
+
+    <!-- Right Side - Group Chat Area -->
+    <div class="flex-1 overflow-hidden flex flex-col">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-primary to-primary-dark dark:from-gray-800 dark:to-gray-900 text-white shadow-lg sticky top-0 z-10">
+            <div class="px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
+                <div class="flex items-center justify-between gap-2 sm:gap-4">
+                    <!-- Back Button & Title -->
+                    <div class="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+                        <a href="{% url 'group_list' %}" class="text-white hover:text-gray-200 transition flex-shrink-0 md:hidden text-lg">
+                            <i class="fas fa-arrow-left"></i>
+                        </a>
+                        <div class="min-w-0 flex-1">
+                            <h1 class="text-base sm:text-xl md:text-2xl font-bold truncate">{{ group.name }}</h1>
+                            <p class="text-xs sm:text-sm text-white/70">{{ group.members.count }} members</p>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                        {% if is_member %}
+                        <button type="button" onclick="openMemberModal()" class="p-2 hover:bg-white/20 rounded-lg transition" title="Members">
+                            <i class="fas fa-users"></i>
+                        </button>
+                        {% if is_admin %}
+                        <button type="button" onclick="openInviteModal()" class="p-2 hover:bg-white/20 rounded-lg transition" title="Invite">
+                            <i class="fas fa-user-plus"></i>
+                        </button>
+                        {% endif %}
+                        {% endif %}
+                        <button type="button" onclick="openGroupInfoModal()" class="p-2 hover:bg-white/20 rounded-lg transition" title="Info">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Messages Container -->
+            <div class="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6 bg-gray-50 dark:bg-gray-900" id="messages-container">
+                {% if messages %}
+                    {% for message in messages %}
+                    <div class="mb-4 flex {% if message.sender == user %}justify-end{% else %}justify-start{% endif %} animate-fadeIn">
+                        <div class="flex gap-3 max-w-xs sm:max-w-md lg:max-w-lg {% if message.sender == user %}flex-row-reverse{% endif %}">
+                            <!-- Avatar -->
+                            {% if message.sender != user %}
+                            <div class="flex-shrink-0">
+                                {% if message.sender.profile.image and message.sender.profile.image.url != '/media/default.jpg' %}
+                                <img src="{{ message.sender.profile.image.url }}" alt="{{ message.sender|get_display_name }}" class="w-8 h-8 rounded-full object-cover">
+                                {% else %}
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white font-bold text-xs text-center">
+                                    {{ message.sender.first_name|first|upper }}{{ message.sender.last_name|first|upper }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+
+                            <!-- Message Bubble -->
+                            <div class="flex flex-col {% if message.sender == user %}items-end{% else %}items-start{% endif %}">
+                                {% if message.sender != user %}
+                                <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                    {{ message.sender|get_display_name }}
+                                </p>
+                                {% endif %}
+                                <div class="px-4 py-3 rounded-2xl {% if message.sender == user %}bg-primary text-white rounded-br-none{% else %}bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-none border border-gray-200 dark:border-gray-700{% endif %} shadow-sm break-words">
+                                    <p class="text-sm leading-relaxed">{{ message.content }}</p>
+                                </div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 px-2">
+                                    {{ message.created_at|date:"H:i" }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="flex items-center justify-center h-full">
+                    <div class="text-center">
+                        <i class="fas fa-comments text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
+                        <p class="text-gray-500 dark:text-gray-400 font-medium">No messages yet</p>
+                        <p class="text-gray-500 dark:text-gray-400 text-sm">Be the first to start the conversation!</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Message Input -->
+            {% if is_member %}
+            <div class="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 sm:px-6 lg:px-8 py-4">
+                <form method="POST" class="flex gap-3">
+                    {% csrf_token %}
+                    <div class="flex-1">
+                        {{ form.content }}
+                    </div>
+                    <button type="submit" class="px-4 py-2 bg-primary text-white rounded-full hover:bg-primary-dark transition font-medium flex-shrink-0 flex items-center gap-2 whitespace-nowrap">
+                        <i class="fas fa-paper-plane"></i><span class="hidden sm:inline">Send</span>
+                    </button>
+                </form>
+            </div>
+            {% else %}
+            <div class="border-t border-gray-200 dark:border-gray-700 bg-blue-50 dark:bg-blue-900/20 px-4 sm:px-6 lg:px-8 py-4">
+                <p class="text-blue-800 dark:text-blue-300 text-sm text-center">
+                    <i class="fas fa-info-circle mr-2"></i>Join this group to start chatting
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+
+<!-- Group Info Modal -->
+<div id="groupInfoModal" class="hidden fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50" onclick="closeGroupInfoModal(event)">
+    <div class="bg-white dark:bg-gray-800 rounded-t-2xl sm:rounded-2xl w-full sm:w-96 max-h-96 overflow-y-auto p-6 shadow-xl" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Group Information</h2>
+            <button onclick="closeGroupInfoModal()" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <div class="space-y-4">
+            <div class="flex items-center gap-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+                <div class="w-16 h-16 rounded-lg bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white font-bold text-2xl">
+                    {{ group.name|first|upper }}
+                </div>
+                <div>
+                    <h3 class="font-bold text-gray-900 dark:text-white">{{ group.name }}</h3>
+                    {% if group.is_public %}
+                    <span class="text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 px-2 py-1 rounded-full">Public Group</span>
+                    {% else %}
+                    <span class="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 px-2 py-1 rounded-full">Private Group</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div>
+                <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Description</p>
+                <p class="text-gray-900 dark:text-white">{{ group.description }}</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Members</p>
+                    <p class="text-lg font-bold text-gray-900 dark:text-white">{{ group.members.count }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Messages</p>
+                    <p class="text-lg font-bold text-gray-900 dark:text-white">{{ group.messages.count }}</p>
+                </div>
+            </div>
+
+            <div>
+                <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Created By</p>
+                <div class="flex items-center gap-2">
+                    {% if group.creator.profile.image %}
+                    <img src="{{ group.creator.profile.image.url }}" alt="{{ group.creator|get_display_name }}" class="w-6 h-6 rounded-full object-cover">
+                    {% else %}
+                    <div class="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white font-bold text-xs text-center">
+                        {{ group.creator.first_name|first|upper }}{{ group.creator.last_name|first|upper }}
+                    </div>
+                    {% endif %}
+                    <span class="text-gray-900 dark:text-white">{{ group.creator|get_display_name }}</span>
+                </div>
+            </div>
+
+            <div class="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                {% if is_member %}
+                <form method="POST" action="{% url 'leave_group' group_id=group.id %}" onsubmit="return confirm('Are you sure you want to leave this group?');" class="flex-1">
+                    {% csrf_token %}
+                    <button type="submit" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Leave Group
+                    </button>
+                </form>
+                {% else %}
+                <form method="POST" action="{% url 'join_group' group_id=group.id %}" class="flex-1">
+                    {% csrf_token %}
+                    <button type="submit" class="w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition font-medium">
+                        <i class="fas fa-plus-circle mr-2"></i>Join Group
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Members Modal -->
+<div id="memberModal" class="hidden fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50" onclick="closeMemberModal(event)">
+    <div class="bg-white dark:bg-gray-800 rounded-t-2xl sm:rounded-2xl w-full sm:w-96 max-h-96 overflow-y-auto p-6 shadow-xl" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Members ({{ group_members|length }})</h2>
+            <button onclick="closeMemberModal()" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <div class="space-y-3">
+            {% for member_obj in group_members %}
+            <div class="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition">
+                <div class="flex items-center gap-3 flex-1 min-w-0">
+                    {% if member_obj.user.profile.image %}
+                    <img src="{{ member_obj.user.profile.image.url }}" alt="{{ member_obj.user|get_display_name }}" class="w-10 h-10 rounded-full object-cover flex-shrink-0">
+                    {% else %}
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white font-bold text-sm flex-shrink-0 text-center">
+                        {{ member_obj.user.first_name|first|upper }}{{ member_obj.user.last_name|first|upper }}
+                    </div>
+                    {% endif %}
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                            {{ member_obj.user|get_display_name }}
+                        </p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                            {% if member_obj.role == 'admin' %}
+                                <span class="bg-primary/20 text-primary dark:text-primary-light px-2 py-0.5 rounded">Admin</span>
+                            {% else %}
+                                <span>Member</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Invite Modal -->
+{% if is_admin %}
+<div id="inviteModal" class="hidden fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50" onclick="closeInviteModal(event)">
+    <div class="bg-white dark:bg-gray-800 rounded-t-2xl sm:rounded-2xl w-full sm:w-96 max-h-96 overflow-y-auto p-6 shadow-xl" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Invite Members</h2>
+            <button onclick="closeInviteModal()" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <form method="POST" action="{% url 'send_group_invite' group_id=group.id %}" class="space-y-4">
+            {% csrf_token %}
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Select User</label>
+                <select name="invitee_id" class="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 border-0 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary transition" required>
+                    <option value="">Choose a user...</option>
+                    {% for user_option in other_users %}
+                    <option value="{{ user_option.id }}">{{ user_option|get_display_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Message (Optional)</label>
+                <textarea name="message" rows="3" placeholder="Add a personal message..." class="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 border-0 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary transition resize-none"></textarea>
+            </div>
+
+            <button type="submit" class="w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition font-medium">
+                <i class="fas fa-user-plus mr-2"></i>Send Invitation
+            </button>
+        </form>
+
+        {% if pending_invitations %}
+        <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <h3 class="text-sm font-bold text-gray-900 dark:text-white mb-3">Pending Invitations</h3>
+            <div class="space-y-2 max-h-32 overflow-y-auto">
+                {% for inv in pending_invitations %}
+                <div class="flex items-center justify-between text-xs p-2 bg-gray-50 dark:bg-gray-700/50 rounded">
+                    <span class="text-gray-700 dark:text-gray-300">{{ inv.invitee|get_display_name }}</span>
+                    <span class="text-gray-500 dark:text-gray-400">Pending</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<script>
+    function openGroupInfoModal() {
+        document.getElementById('groupInfoModal').classList.remove('hidden');
+    }
+
+    function closeGroupInfoModal(event) {
+        if (event && event.target.id !== 'groupInfoModal') return;
+        document.getElementById('groupInfoModal').classList.add('hidden');
+    }
+
+    function openMemberModal() {
+        document.getElementById('memberModal').classList.remove('hidden');
+    }
+
+    function closeMemberModal(event) {
+        if (event && event.target.id !== 'memberModal') return;
+        document.getElementById('memberModal').classList.add('hidden');
+    }
+
+    function openInviteModal() {
+        document.getElementById('inviteModal').classList.remove('hidden');
+    }
+
+    function closeInviteModal(event) {
+        if (event && event.target.id !== 'inviteModal') return;
+        document.getElementById('inviteModal').classList.add('hidden');
+    }
+
+    // Auto-scroll to bottom on load
+    const container = document.getElementById('messages-container');
+    if (container) {
+        container.scrollTop = container.scrollHeight;
+    }
+
+    // Mobile Sidebar Toggle
+    const mobileSidebarToggle = document.getElementById('mobile-sidebar-toggle');
+    const mobileSidebar = document.getElementById('mobile-sidebar');
+    const mobileSidebarClose = document.getElementById('mobile-sidebar-close');
+    const mobileSidebarOverlay = document.getElementById('mobile-sidebar-overlay');
+
+    function toggleMobileSidebar() {
+        mobileSidebar.classList.toggle('hidden');
+        mobileSidebarOverlay.classList.toggle('hidden');
+    }
+
+    function closeMobileSidebar() {
+        mobileSidebar.classList.add('hidden');
+        mobileSidebarOverlay.classList.add('hidden');
+    }
+
+    mobileSidebarToggle.addEventListener('click', toggleMobileSidebar);
+    mobileSidebarClose.addEventListener('click', closeMobileSidebar);
+    mobileSidebarOverlay.addEventListener('click', closeMobileSidebar);
+
+    // Close sidebar when clicking on a group link
+    document.querySelectorAll('#mobile-sidebar a').forEach(link => {
+        link.addEventListener('click', closeMobileSidebar);
+    });
+
+</script>
+
+<style>
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fadeIn {
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    /* Customize textarea */
+    textarea {
+        font-family: inherit;
+    }
+
+    textarea::placeholder {
+        color: rgba(107, 114, 128, 0.7);
+    }
+</style>
+{% endblock %}

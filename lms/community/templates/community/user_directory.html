@@ -1,0 +1,173 @@
+{% extends 'home/base.html' %}
+{% load static %}
+{% load user_display_filters %}
+
+{% block title %}Discover Users & Connect{% endblock %}
+
+{% block content %}
+<div class="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+    <div class="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <!-- Back Button -->
+        <div class="mb-4">
+            <a href="{% url 'community_hub' %}" class="inline-flex items-center text-primary dark:text-primary-light hover:text-primary-dark dark:hover:text-primary font-semibold text-xs sm:text-sm">
+                <i class="fas fa-chevron-left mr-1 text-sm sm:text-base"></i>Back to Community
+            </a>
+        </div>
+
+        <!-- Header -->
+        <div class="mb-6 sm:mb-8">
+            <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">
+                <i class="fas fa-users text-primary mr-1 sm:mr-2 text-lg sm:text-2xl"></i>Discover & Connect
+            </h1>
+            <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Find and connect with other {{ user_role }}s on Kuza Ndoto Academy</p>
+        </div>
+
+        <!-- Search & Filters -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-3 sm:p-6 mb-6 sm:mb-8">
+            <form method="GET" class="space-y-4">
+                <div class="grid gap-4 md:grid-cols-3">
+                    <!-- Search Input -->
+                    <div class="md:col-span-2">
+                        <label for="q" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <i class="fas fa-search mr-2"></i>Search Users
+                        </label>
+                        <input type="search" name="q" id="q" value="{{ search_query }}" placeholder="Search by name or email..." class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+                    
+                    <!-- Role Filter -->
+                    <div>
+                        <label for="role" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <i class="fas fa-filter mr-2"></i>Filter by Role
+                        </label>
+                        <select name="role" id="role" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                            <option value="">All Roles</option>
+                            <option value="student" {% if role_filter == 'student' %}selected{% endif %}>Students</option>
+                            <option value="instructor" {% if role_filter == 'instructor' %}selected{% endif %}>Instructors</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="flex gap-2">
+                    <button type="submit" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition font-medium">
+                        <i class="fas fa-search mr-2"></i>Search
+                    </button>
+                    <a href="{% url 'user_directory' %}" class="px-6 py-2 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition font-medium">
+                        <i class="fas fa-redo mr-2"></i>Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Users Grid -->
+        {% if users %}
+        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {% for user in users %}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition overflow-hidden group">
+                <!-- User Card Header (with gradient background) -->
+                <div class="h-24 bg-gradient-to-r from-primary to-primary-dark relative"></div>
+                
+                <!-- Avatar (overlapping header) -->
+                <div class="px-6 pb-4">
+                    <div class="flex flex-col items-center -mt-16 mb-4">
+                        {% if user.profile.image and user.profile.image.url != '/media/default.jpg' %}
+                        <img src="{{ user.profile.image.url }}" alt="{{ user.get_full_name }}" class="w-20 h-20 rounded-full object-cover border-4 border-white dark:border-gray-800 shadow-md">
+                        {% else %}
+                        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white font-bold text-2xl border-4 border-white dark:border-gray-800 shadow-md">
+                            {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- User Info -->
+                    <div class="text-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                            {{ user|get_display_name }}
+                        </h3>
+                        <p class="text-sm px-2 py-1 rounded-full text-primary bg-primary/10 inline-block mt-2">
+                            {% if user.role == 'instructor' %}
+                            <i class="fas fa-chalkboard-teacher mr-1"></i>Instructor
+                            {% else %}
+                            <i class="fas fa-student mr-1"></i>Student
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <!-- User Stats (if enrolled in courses) -->
+                    <div class="flex justify-around text-center py-3 border-t border-b border-gray-200 dark:border-gray-700 mb-4">
+                        <div>
+                            <p class="text-2xl font-bold text-primary">{{ user.enrollments.count|default:0 }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Courses</p>
+                        </div>
+                        {% if user.role == 'instructor' %}
+                        <div>
+                            <p class="text-2xl font-bold text-primary">0</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Teaching</p>
+                        </div>
+                        {% else %}
+                        <div>
+                            <p class="text-2xl font-bold text-primary">{{ user.profile.points|default:0 }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Points</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex gap-2">
+                        {% if user.id in chatting_with_ids %}
+                        <!-- Already chatting -->
+                        <a href="{% url 'unified_conversation' %}?type=direct&user_id={{ user.id }}" class="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition text-center font-medium text-sm">
+                            <i class="fas fa-comments mr-1"></i>Open Chat
+                        </a>
+                        {% else %}
+                        <!-- Start new chat -->
+                        <a href="{% url 'unified_conversation' %}?type=direct&user_id={{ user.id }}" class="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition text-center font-medium text-sm">
+                            <i class="fas fa-plus-circle mr-1"></i>Start Chat
+                        </a>
+                        {% endif %}
+                        
+                        <!-- View Profile -->
+                        <button class="px-4 py-2 border border-primary text-primary rounded-lg hover:bg-primary/10 transition text-sm font-medium">
+                            <i class="fas fa-user"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- No Users Found -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
+            <i class="fas fa-search text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No users found</h2>
+            <p class="text-gray-600 dark:text-gray-400 mb-6">
+                {% if search_query %}
+                No users matching "{{ search_query }}"
+                {% elif role_filter %}
+                No {{ role_filter }}s found
+                {% else %}
+                No users available to connect with
+                {% endif %}
+            </p>
+            {% if search_query or role_filter %}
+            <a href="{% url 'user_directory' %}" class="inline-flex items-center px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition">
+                <i class="fas fa-redo mr-2"></i>Clear Filters
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Network Tips -->
+        <div class="mt-12 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-4">
+                <i class="fas fa-lightbulb mr-2"></i>Networking Tips
+            </h3>
+            <ul class="grid gap-3 md:grid-cols-2 text-sm text-blue-800 dark:text-blue-200">
+                <li><i class="fas fa-check mr-2 text-blue-600"></i>Connect with instructors to ask questions</li>
+                <li><i class="fas fa-check mr-2 text-blue-600"></i>Build study groups with fellow students</li>
+                <li><i class="fas fa-check mr-2 text-blue-600"></i>Share learning resources and tips</li>
+                <li><i class="fas fa-check mr-2 text-blue-600"></i>Get mentorship from experienced coursemates</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends 'users/auth_base.html' %}
+{% load crispy_forms_tags %}
+{% load socialaccount %}
+
+{% block title %}Login | Kuza Ndoto Academy{% endblock %}
+
+{% block auth_subtitle %}Your Gateway Into the Future{% endblock %}
+
+{% block content %}
+<div class="flex flex-col sm:flex-row gap-3 mb-6">
+    <a href="{% provider_login_url 'google' %}"
+        class="w-full bg-white hover:bg-gray-50 py-2.5 rounded-xl border border-gray-200 transition flex items-center justify-center space-x-3 shadow-sm text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1"
+        aria-label="Sign in with Google">
+        <i class="fa-brands fa-google text-xl text-red-500"></i>
+        <span class="font-semibold text-sm">Sign in Google</span>
+    </a>
+
+    <a href="#"
+        class="w-full bg-gray-900 hover:bg-gray-800 py-2.5 rounded-xl transition flex items-center justify-center space-x-3 shadow border border-transparent text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-1"
+        aria-label="Sign in with GitHub">
+        <i class="fa-brands fa-github text-xl"></i>
+        <span class="font-semibold text-sm">Sign in GitHub</span>
+    </a>
+</div>
+
+<div class="flex items-center mb-6 w-full">
+    <hr class="flex-1 h-px bg-gray-200 border-0">
+    <span class="mx-3 text-gray-400 text-xs text-center font-medium uppercase tracking-wider">Or sign in manually</span>
+    <hr class="flex-1 h-px bg-gray-200 border-0">
+</div>
+
+{% if form.errors %}
+<div class="mb-5 p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+    <i class="fas fa-exclamation-circle mt-0.5 text-red-500"></i>
+    <span>Invalid login credentials. Please try again.</span>
+</div>
+{% endif %}
+
+<form method="POST" class="space-y-4">
+    {% csrf_token %}
+    
+    {% for field in form %}
+    <div>
+        <label for="{{ field.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-1">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}
+        <p class="mt-1 text-xs text-gray-500">{{ field.help_text|safe }}</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 pt-2">
+        <div class="flex items-center">
+            <input id="remember-me" name="remember-me" type="checkbox"
+                    class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded cursor-pointer">
+            <label for="remember-me" class="ml-2 block text-sm text-gray-600 cursor-pointer">
+            Remember me
+            </label>
+        </div>
+        <div class="text-sm">
+            <a href="#" class="font-medium text-primary hover:text-primary-dark transition-colors">
+            Forgot password?
+            </a>
+        </div>
+    </div>
+
+    <button type="submit"
+            class="w-full bg-primary py-3 rounded-xl hover:bg-primary-dark transition text-white font-bold shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 mt-4">
+        Sign in
+    </button>
+</form>
+
+<p class="mt-8 text-center text-sm text-gray-600">
+    Don't have an account?
+    <a href="{% url 'register' %}" class="text-primary hover:text-primary-dark font-semibold transition-colors">Sign up</a>
+</p>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Style Django forms elements
+    document.addEventListener("DOMContentLoaded", function() {
+        const inputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]');
+        inputs.forEach(input => {
+            input.classList.add('w-full', 'rounded-xl', 'border', 'border-gray-300', 'px-4', 'py-2.5', 'text-gray-900', 'focus:outline-none', 'focus:ring-2', 'focus:ring-primary', 'focus:border-primary', 'transition-shadow');
+        });
+    });
+</script>
+{% endblock %}

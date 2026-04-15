@@ -1,0 +1,137 @@
+{% extends 'home/base.html' %}
+{% load static %}
+
+{% block title %}Update User Rights - {{ user.email }}{% endblock %}
+
+{% block content %}
+<div class="flex-1 overflow-y-auto">
+    <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Update User Rights</h1>
+            <p class="mt-2 text-gray-600 dark:text-gray-400">{{ user.email }}</p>
+        </div>
+
+        <!-- User Info Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    {% if user.profile.image %}
+                    <img src="{{ user.profile.image.url }}" alt="" class="w-16 h-16 rounded-full mr-4">
+                    {% else %}
+                    <div class="w-16 h-16 rounded-full bg-gray-300 dark:bg-gray-600 mr-4 flex items-center justify-center">
+                        <i class="fas fa-user text-2xl text-gray-500"></i>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ user.get_full_name|default:user.email }}</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ user.email }}</p>
+                    </div>
+                </div>
+                <a href="{% url 'user_detail_admin' user.id %}" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </a>
+            </div>
+        </div>
+
+        <!-- Rights Form -->
+        <form method="post" class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            {% csrf_token %}
+
+            <!-- User Role -->
+            <div class="mb-8 pb-8 border-b border-gray-200 dark:border-gray-700">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">User Role</h2>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Select the primary role for this user.</p>
+                
+                <div class="space-y-3">
+                    <label class="flex items-center p-4 border-2 {% if user.role == 'student' %}border-primary bg-primary bg-opacity-5{% else %}border-gray-200 dark:border-gray-600{% endif %} rounded-lg cursor-pointer hover:border-primary dark:hover:border-primary transition">
+                        <input type="radio" name="role" value="student" {% if user.role == 'student' %}checked{% endif %} class="w-5 h-5 accent-primary">
+                        <div class="ml-4">
+                            <p class="font-semibold text-gray-900 dark:text-white">Student</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Can enroll in courses and complete learning materials</p>
+                        </div>
+                    </label>
+                    
+                    <label class="flex items-center p-4 border-2 {% if user.role == 'instructor' %}border-green-500 bg-green-50 dark:bg-green-900 dark:bg-opacity-20{% else %}border-gray-200 dark:border-gray-600{% endif %} rounded-lg cursor-pointer hover:border-green-500 dark:hover:border-green-400 transition">
+                        <input type="radio" name="role" value="instructor" {% if user.role == 'instructor' %}checked{% endif %} class="w-5 h-5 accent-green-500">
+                        <div class="ml-4">
+                            <p class="font-semibold text-gray-900 dark:text-white">Instructor</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Can create and manage courses, modules, lessons, and quizzes</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Staff/Admin Rights -->
+            <div class="mb-8 pb-8 border-b border-gray-200 dark:border-gray-700">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Staff Rights</h2>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Grant staff access to the Django admin panel.</p>
+                
+                <label class="flex items-center p-4 border-2 {% if user.is_staff %}border-yellow-500 bg-yellow-50 dark:bg-yellow-900 dark:bg-opacity-20{% else %}border-gray-200 dark:border-gray-600{% endif %} rounded-lg cursor-pointer hover:border-yellow-500 dark:hover:border-yellow-400 transition">
+                    <input type="checkbox" name="is_staff" {% if user.is_staff %}checked{% endif %} class="w-5 h-5 accent-yellow-500 rounded">
+                    <div class="ml-4">
+                        <p class="font-semibold text-gray-900 dark:text-white">Admin (Staff)</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Access to Django admin panel and staff management features</p>
+                    </div>
+                </label>
+            </div>
+
+            <!-- Superuser Rights -->
+            <div class="mb-8">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Superuser Rights</h2>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Grant complete system access.</p>
+                
+                <label class="flex items-center p-4 border-2 {% if user.is_superuser %}border-red-500 bg-red-50 dark:bg-red-900 dark:bg-opacity-20{% else %}border-gray-200 dark:border-gray-600{% endif %} rounded-lg cursor-pointer hover:border-red-500 dark:hover:border-red-400 transition">
+                    <input type="checkbox" name="is_superuser" {% if user.is_superuser %}checked{% endif %} class="w-5 h-5 accent-red-500 rounded">
+                    <div class="ml-4">
+                        <p class="font-semibold text-gray-900 dark:text-white">Superuser</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Complete system access, can manage all features and users</p>
+                    </div>
+                </label>
+            </div>
+
+            <!-- Current Permissions Summary -->
+            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-6 mb-8">
+                <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Current Permissions Summary</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        <i class="fas fa-{% if user.role == 'instructor' %}check{% else %}times{% endif %}-circle text-{% if user.role == 'instructor' %}green{% else %}gray{% endif %}-500 mr-3"></i>
+                        <span class="text-gray-700 dark:text-gray-300">Teaching (Instructor): {% if user.role == 'instructor' %}Yes{% else %}No{% endif %}</span>
+                    </div>
+                    <div class="flex items-center">
+                        <i class="fas fa-{% if user.is_staff %}check{% else %}times{% endif %}-circle text-{% if user.is_staff %}yellow{% else %}gray{% endif %}-500 mr-3"></i>
+                        <span class="text-gray-700 dark:text-gray-300">Admin: {% if user.is_staff %}Yes{% else %}No{% endif %}</span>
+                    </div>
+                    <div class="flex items-center">
+                        <i class="fas fa-{% if user.is_superuser %}check{% else %}times{% endif %}-circle text-{% if user.is_superuser %}red{% else %}gray{% endif %}-500 mr-3"></i>
+                        <span class="text-gray-700 dark:text-gray-300">Superuser: {% if user.is_superuser %}Yes{% else %}No{% endif %}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="flex gap-4">
+                <button type="submit" class="flex-1 px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition">
+                    <i class="fas fa-save mr-2"></i>Save Changes
+                </button>
+                <a href="{% url 'user_detail_admin' user.id %}" class="flex-1 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition text-center">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </a>
+            </div>
+        </form>
+
+        <!-- Permission Notes -->
+        <div class="mt-8 bg-blue-50 dark:bg-blue-900 dark:bg-opacity-20 border-l-4 border-blue-500 p-6 rounded">
+            <h3 class="font-semibold text-blue-900 dark:text-blue-200 mb-2">
+                <i class="fas fa-info-circle mr-2"></i>Important Notes
+            </h3>
+            <ul class="text-sm text-blue-800 dark:text-blue-300 space-y-1">
+                <li>• Superusers automatically have staff rights</li>
+                <li>• Users can have both Student and Instructor roles</li>
+                <li>• Admin/Staff rights grant access to the Django admin panel</li>
+                <li>• Changes take effect immediately</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

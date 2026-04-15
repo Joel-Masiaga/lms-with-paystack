@@ -1,0 +1,98 @@
+{% extends 'home/base.html' %}
+{% load static %}
+
+{% block title %}Preview Course Announcement{% endblock %}
+
+{% block content %}
+<div class="flex-1 overflow-y-auto">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Review Announcement</h1>
+            <p class="mt-2 text-gray-600 dark:text-gray-400">Please review before sending</p>
+        </div>
+
+        <!-- Course & Recipients Info -->
+        <div class="bg-blue-50 dark:bg-blue-900 dark:bg-opacity-30 border-l-4 border-blue-500 p-4 mb-8 rounded-lg">
+            <div class="flex items-start">
+                <i class="fas fa-info-circle text-blue-500 mt-1 mr-3 flex-shrink-0"></i>
+                <div>
+                    <p class="text-sm font-medium text-blue-900 dark:text-blue-200">
+                        Course: <strong>{{ selected_course.title }}</strong>
+                    </p>
+                    <p class="text-sm text-blue-800 dark:text-blue-300 mt-1">
+                        Recipients: <strong>{{ recipients_count }} student(s)</strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Email Preview -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden mb-8">
+            <!-- Subject -->
+            <div class="border-b border-gray-200 dark:border-gray-700 p-6">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    <i class="fas fa-heading text-primary mr-2"></i>{{ subject }}
+                </h2>
+            </div>
+
+            <!-- Body -->
+            <div class="p-6">
+                <div class="prose dark:prose-invert max-w-none whitespace-pre-wrap text-gray-700 dark:text-gray-300">
+                    {{ body }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Enrolled Students List -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden mb-8">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    <i class="fas fa-users text-primary mr-2"></i>Recipients ({{ recipients_count }})
+                </h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Email</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        {% for student in students_list %}
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                {{ student.get_full_name|default:student.username }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                                {{ student.email }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                                    <i class="fas fa-check-circle mr-1"></i>Ready
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-4">
+            <form method="post" class="flex-1">
+                {% csrf_token %}
+                <button type="submit" class="w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition">
+                    <i class="fas fa-check mr-2"></i>Send to {{ recipients_count }} Student(s)
+                </button>
+            </form>
+            <a href="{% url 'instructor_email' %}" class="flex-1 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition text-center">
+                <i class="fas fa-arrow-left mr-2"></i>Edit
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

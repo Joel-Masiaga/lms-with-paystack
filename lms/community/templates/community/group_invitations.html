@@ -1,0 +1,128 @@
+{% extends 'home/base.html' %}
+{% load static %}
+
+{% block title %}Group Invitations{% endblock %}
+
+{% block content %}
+<div class="flex-1 overflow-y-auto">
+    <div class="max-w-3xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <!-- Header -->
+        <div class="mb-6 sm:mb-8">
+            <div class="flex items-center gap-2 sm:gap-4 mb-4 sm:mb-6">
+                <a href="{% url 'community_hub' %}" class="text-primary hover:text-primary-dark transition">
+                    <i class="fas fa-arrow-left text-lg sm:text-xl"></i>
+                </a>
+                <div>
+                    <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+                        <i class="fas fa-inbox text-primary mr-1 sm:mr-2 text-lg sm:text-2xl"></i>Group Invitations
+                    </h1>
+                    <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{{ pending_invites|length }} pending invitation{{ pending_invites|length|pluralize }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Invitations -->
+        {% if pending_invites %}
+        <div class="space-y-4">
+            {% for invite in pending_invites %}
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition">
+                <!-- Invitation Content -->
+                <div class="p-6">
+                    <div class="flex items-start gap-4 mb-4">
+                        <!-- Group Avatar -->
+                        <div class="w-16 h-16 rounded-lg bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white font-bold text-2xl flex-shrink-0">
+                            {{ invite.group.name|first|upper }}
+                        </div>
+
+                        <!-- Invitation Details -->
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1">
+                                {{ invite.group.name }}
+                            </h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                <i class="fas fa-user-circle text-primary mr-1"></i>
+                                Invited by <span class="font-medium">{{ invite.created_by.get_full_name|default:invite.created_by.username }}</span>
+                            </p>
+                            
+                            {% if invite.message %}
+                            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mt-3 border border-gray-200 dark:border-gray-600">
+                                <p class="text-sm text-gray-700 dark:text-gray-300 italic">
+                                    <i class="fas fa-quote-left text-primary/50 mr-2"></i>
+                                    {{ invite.message }}
+                                </p>
+                            </div>
+                            {% endif %}
+
+                            <div class="flex items-center gap-4 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
+                                <span>
+                                    <i class="fas fa-users mr-1"></i>
+                                    {{ invite.group.members.count }} members
+                                </span>
+                                <span>
+                                    <i class="fas fa-calendar mr-1"></i>
+                                    Expires {{ invite.expires_at|date:"M d, Y" }}
+                                </span>
+                                <span>
+                                    <i class="fas fa-clock mr-1"></i>
+                                    {% if invite.expires_at|timeuntil %}
+                                        in {{ invite.expires_at|timeuntil }}
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                        <form method="POST" class="flex-1">
+                            {% csrf_token %}
+                            <input type="hidden" name="invitation_id" value="{{ invite.id }}">
+                            <button type="submit" name="action" value="accept" class="w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition font-medium flex items-center justify-center gap-2">
+                                <i class="fas fa-check-circle"></i>Accept Invitation
+                            </button>
+                        </form>
+                        <form method="POST" class="flex-1">
+                            {% csrf_token %}
+                            <input type="hidden" name="invitation_id" value="{{ invite.id }}">
+                            <button type="submit" name="action" value="decline" class="w-full px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition font-medium flex items-center justify-center gap-2">
+                                <i class="fas fa-times-circle"></i>Decline
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- Empty State -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12">
+            <div class="text-center">
+                <i class="fas fa-inbox text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No pending invitations</h3>
+                <p class="text-gray-600 dark:text-gray-400 mb-6">
+                    You don't have any pending group invitations right now.
+                </p>
+                <div class="flex gap-3 justify-center">
+                    <a href="{% url 'group_discovery' %}" class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition font-medium inline-block">
+                        <i class="fas fa-search mr-2"></i>Discover Groups
+                    </a>
+                    <a href="{% url 'create_group' %}" class="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition font-medium inline-block">
+                        <i class="fas fa-plus-circle mr-2"></i>Create Group
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Expired Invitations Info -->
+        {% if expired_count > 0 %}
+        <div class="mt-8 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+            <p class="text-sm text-yellow-800 dark:text-yellow-200">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                You have <span class="font-semibold">{{ expired_count }}</span> expired invitation{{ expired_count|pluralize }}.
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

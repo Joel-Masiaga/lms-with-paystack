@@ -1,0 +1,97 @@
+{% extends 'home/base.html' %}
+{% load static %}
+
+{% block title %}Send Course Announcement {% endblock %}
+
+{% block content %}
+<div class="flex-1 overflow-y-auto">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Course Announcement</h1>
+            <p class="mt-2 text-gray-600 dark:text-gray-400">Send emails to students enrolled in your course</p>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="flex gap-2 mb-8 border-b border-gray-200 dark:border-gray-700">
+            <a href="{% url 'instructor_email' %}" class="px-4 py-3 border-b-2 border-primary font-semibold text-primary">
+                <i class="fas fa-envelope mr-2"></i>Send Email
+            </a>
+            <a href="{% url 'instructor_email_history' %}" class="px-4 py-3 border-b-2 border-transparent font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                <i class="fas fa-history mr-2"></i>History
+            </a>
+        </div>
+
+        <!-- Form -->
+        <form method="post" class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8">
+            {% csrf_token %}
+            
+            <!-- Course Selection -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <i class="fas fa-book text-primary mr-2"></i>Select Course
+                </label>
+                {{ form.course }}
+                {% if form.course.errors %}
+                <p class="text-red-500 text-sm mt-1">{{ form.course.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Subject -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <i class="fas fa-heading text-primary mr-2"></i>Subject
+                </label>
+                {{ form.subject }}
+                {% if form.subject.errors %}
+                <p class="text-red-500 text-sm mt-1">{{ form.subject.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Message Body -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <i class="fas fa-message text-primary mr-2"></i>Message
+                </label>
+                {{ form.body }}
+                {% if form.body.errors %}
+                <p class="text-red-500 text-sm mt-1">{{ form.body.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Show selected course info if available -->
+            {% if selected_course and enrolled_students %}
+            <div class="bg-blue-50 dark:bg-blue-900 dark:bg-opacity-30 border-l-4 border-blue-500 p-4 mb-6 rounded">
+                <p class="text-sm text-blue-800 dark:text-blue-200">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    This email will be sent to <strong>{{ enrolled_students }}</strong> student(s) enrolled in <strong>{{ selected_course.title }}</strong>
+                </p>
+            </div>
+            {% endif %}
+
+            <!-- Submit Buttons -->
+            <div class="flex gap-4">
+                <button type="submit" name="action" value="preview" class="flex-1 px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition">
+                    <i class="fas fa-eye mr-2"></i>Preview & Send
+                </button>
+                <a href="{% url 'instructor_course_list' %}" class="flex-1 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition text-center">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </a>
+            </div>
+        </form>
+
+        <!-- Tips Section -->
+        <div class="bg-green-50 dark:bg-green-900 dark:bg-opacity-20 border-l-4 border-green-500 p-6 rounded-lg">
+            <h3 class="font-semibold text-green-900 dark:text-green-200 mb-3">
+                <i class="fas fa-lightbulb mr-2"></i>Tips for Effective Announcements
+            </h3>
+            <ul class="text-sm text-green-800 dark:text-green-300 space-y-2">
+                <li>• Use a clear, concise subject line</li>
+                <li>• Keep your message focused and easy to understand</li>
+                <li>• Include important deadlines or action items</li>
+                <li>• Review your message before sending</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

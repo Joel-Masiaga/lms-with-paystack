@@ -1,0 +1,200 @@
+{% extends 'home/base.html' %}
+{% load static %}
+
+{% block title %}My Courses - Kuza Ndoto Academy{% endblock %}
+
+{% block content %}
+<main class="flex-1 pt-4 pb-20 sm:pt-6 sm:pb-6 bg-gray-100 dark:bg-gray-900 overflow-y-auto">
+
+    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-6 px-4 sm:px-6">My Courses</h1>
+
+    <nav class="flex overflow-x-auto items-center border-b border-gray-200 dark:border-gray-700 mb-6 -mt-2 px-4 sm:px-6">
+        {% with all_count=enrolled_courses.count|add:other_courses.count enrolled_count=enrolled_courses.count completed_count=completed_courses|length %}
+        {# 'All' Tab #}
+        <a href="{% url 'courses' %}"
+            class="tab-link {% if current_filter == 'all' or not current_filter %}active text-primary dark:text-primary-light font-semibold border-b-2 border-primary dark:border-primary-light{% else %}text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 font-medium{% endif %} py-3 px-3 sm:px-4 flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 rounded-t whitespace-nowrap"
+            data-tab="all">
+            All <span
+                class="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-semibold px-2 py-0.5 rounded-full">{{ all_count }}</span>
+        </a>
+        {# 'Enrolled' Tab #}
+        <a href="{% url 'courses' %}?filter=enrolled"
+            class="tab-link {% if current_filter == 'enrolled' %}active text-primary dark:text-primary-light font-semibold border-b-2 border-primary dark:border-primary-light{% else %}text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 font-medium{% endif %} py-3 px-3 sm:px-4 flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 rounded-t whitespace-nowrap"
+            data-tab="enrolled">
+            Enrolled <span
+                class="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-semibold px-2 py-0.5 rounded-full">{{ enrolled_count }}</span>
+        </a>
+        {# 'Completed' Tab #}
+        <a href="{% url 'courses' %}?filter=completed"
+            class="tab-link {% if current_filter == 'completed' %}active text-primary dark:text-primary-light font-semibold border-b-2 border-primary dark:border-primary-light{% else %}text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 font-medium{% endif %} py-3 px-3 sm:px-4 flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 rounded-t whitespace-nowrap"
+            data-tab="completed">
+            Completed <span
+                class="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-semibold px-2 py-0.5 rounded-full">{{ completed_count }}</span>
+        </a>
+        {% endwith %}
+    </nav>
+
+
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4 sm:px-6">
+
+        {# --- Conditional Display Logic --- #}
+
+        {# Display COMPLETED courses if filter is 'completed' or 'all' #}
+        {% if current_filter == 'completed' or current_filter == 'all' or not current_filter %}
+        {% for course in completed_courses %}
+        <div
+            class="course-card completed all bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 block focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 opacity-90">
+            <div class="relative">
+                {% if course.image %}
+                <img src="{{ course.image.url }}" alt="{{ course.title }} Thumbnail" class="w-full h-40 object-cover"
+                    onerror="this.src='https://placehold.co/400x225/22c55e/FFF?text={{ course.title.0|upper }}'">
+                {% else %}
+                <img src="https://placehold.co/400x225/22c55e/FFF?text={{ course.title.0|upper }}"
+                    alt="{{ course.title }} Thumbnail" class="w-full h-40 object-cover">
+                {% endif %}
+                <span
+                    class="absolute top-2 left-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-md uppercase tracking-wider">Completed</span>
+            </div>
+            <div class="p-4">
+                <h4
+                    class="font-bold text-lg tracking-tight text-primary-darker dark:text-primary-light hover:text-primary dark:hover:text-primary-light dark:text-primary-light dark:hover:text-primary-light transition-colors mb-2 truncate">
+                    {{ course.title }}</h4>
+                <div class="progress-bar progress-bar-sm mb-2 dark:bg-gray-700">
+                    <div class="progress-bar-fill bg-green-500" style="width: 100%;"></div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a href="{% url 'certificate_list' %}"
+                        class="text-sm text-primary dark:text-primary-light font-medium hover:underline">View
+                        certificate</a>
+                    <a href="{% url 'course_detail' course.pk %}"
+                        class="text-sm text-primary dark:text-primary-light font-medium hover:underline">Review
+                        course</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        {# Display ENROLLED (but NOT completed) courses if filter is 'enrolled' or 'all' #}
+        {% if current_filter == 'enrolled' or current_filter == 'all' or not current_filter %}
+        {% for course in enrolled_not_completed_courses %} {# Use the new list from view #}
+        <div
+            class="course-card enrolled all bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 block focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800">
+            <div class="relative">
+                {% if course.image %}
+                <img src="{{ course.image.url }}" alt="{{ course.title }} Thumbnail" class="w-full h-40 object-cover"
+                    onerror="this.src='https://placehold.co/400x225/00878d/FFF?text={{ course.title.0|upper }}'">
+                {% else %}
+                <img src="https://placehold.co/400x225/00878d/FFF?text={{ course.title.0|upper }}"
+                    alt="{{ course.title }} Thumbnail" class="w-full h-40 object-cover">
+                {% endif %}
+                <span
+                    class="absolute top-2 left-2 bg-primary text-white text-xs font-bold px-2 py-1 rounded-md uppercase tracking-wider">Enrolled</span>
+            </div>
+            <div class="p-4">
+                <h4
+                    class="font-semibold text-lg text-primary-darker dark:text-primary-light hover:text-primary dark:hover:text-primary-light dark:text-primary-light dark:hover:text-primary-light transition-colors mb-2 truncate">
+                    {{ course.title }}</h4>
+                {# Placeholder Progress - Calculate real progress if needed #}
+                <div class="progress-bar progress-bar-sm mb-1 dark:bg-gray-700">
+                    <div class="progress-bar-fill" style="width: 50%;"></div>
+                </div> {# You might want to replace 50% with actual progress later #}
+                <a href="{% url 'course_detail' course.pk %}"
+                    class="text-sm text-primary dark:text-primary-light font-medium hover:underline">Continue
+                    learning</a>
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        {# Display OTHER courses only if filter is 'all' #}
+        {% if current_filter == 'all' or not current_filter %}
+        {% for course in other_courses %}
+        <div
+            class="course-card all bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 block focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800">
+            <div class="relative">
+                {% if course.image %}
+                <img src="{{ course.image.url }}" alt="{{ course.title }} Thumbnail" class="w-full h-40 object-cover"
+                    onerror="this.src='https://placehold.co/400x225/777/FFF?text={{ course.title.0|upper }}'">
+                {% else %}
+                <img src="https://placehold.co/400x225/777/FFF?text={{ course.title.0|upper }}"
+                    alt="{{ course.title }} Thumbnail" class="w-full h-40 object-cover">
+                {% endif %}
+                {# Price badges #}
+                <div class="absolute top-2 right-2 space-y-1">
+                    {% if course.is_premium %}
+                        <span class="block bg-amber-500 text-white text-xs font-bold px-2.5 py-1 rounded-md flex items-center gap-1 shadow">
+                            <i class="fas fa-crown text-[10px]"></i> Premium
+                        </span>
+                        {% if course.discount_percentage > 0 %}
+                            <span class="block bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-md shadow text-center">
+                                Save {{ course.discount_percentage }}%
+                            </span>
+                        {% endif %}
+                    {% else %}
+                        <span class="block bg-green-500 text-white text-xs font-bold px-2.5 py-1 rounded-md flex items-center gap-1 shadow">
+                            <i class="fas fa-gift text-[10px]"></i> FREE
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="p-4">
+                <h4
+                    class="font-bold text-lg tracking-tight text-primary-darker dark:text-primary-light hover:text-primary dark:hover:text-primary-light dark:text-primary-light dark:hover:text-primary-light transition-colors mb-2 truncate">
+                    {{ course.title }}</h4>
+                {% with desc=course.description|striptags|truncatewords:15 %}
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-3 leading-relaxed">{{ desc }}</p>
+                {% endwith %}
+                
+                {# Pricing Information #}
+                {% if course.is_premium %}
+                <div class="bg-gray-50 dark:bg-gray-700 rounded p-2.5 mb-3 text-xs border border-gray-200 dark:border-gray-600">
+                    {% if course.discount_percentage > 0 %}
+                        <div class="flex justify-between items-center mb-1.5">
+                            <span class="text-gray-600 dark:text-gray-400">Actual Price:</span>
+                            <span class="line-through text-gray-500 dark:text-gray-500 font-semibold">KSH {{ course.actual_price|floatformat:0 }}</span>
+                        </div>
+                        <div class="flex justify-between items-center border-t border-gray-200 dark:border-gray-600 pt-1.5 font-semibold">
+                            <span class="text-green-600 dark:text-green-400">You Pay:</span>
+                            <span class="text-primary dark:text-primary-light text-sm">KSH {{ course.subsidized_price|floatformat:0 }}</span>
+                        </div>
+                        <div class="text-center mt-1.5 bg-red-50 dark:bg-red-900/20 rounded py-1">
+                            <span class="text-red-600 dark:text-red-400 font-bold">{{ course.discount_percentage }}% OFF</span>
+                        </div>
+                    {% else %}
+                        <div class="text-center font-semibold text-primary dark:text-primary-light text-sm">
+                            KSH {{ course.actual_price|floatformat:0 }}
+                        </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                <a href="{% url 'course_detail' course.pk %}"
+                    class="text-sm text-primary dark:text-primary-light font-medium hover:underline">View Details</a>
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        {# --- Message if a specific filter yields no results --- #}
+        {% comment %} Corrected logic structure {% endcomment %}
+        {% if current_filter == 'enrolled' and not enrolled_not_completed_courses %}
+        <p class="text-gray-600 dark:text-gray-400 md:col-span-2 lg:col-span-3 italic">You have no courses currently in
+            progress.</p>
+        {% elif current_filter == 'completed' and not completed_courses %}
+        <p class="text-gray-600 dark:text-gray-400 md:col-span-2 lg:col-span-3 italic">You have not completed any
+            courses yet.</p>
+        {% elif current_filter == 'all' or not current_filter %}
+        {% if not completed_courses and not enrolled_not_completed_courses and not other_courses %}
+        <p class="text-gray-600 dark:text-gray-400 md:col-span-2 lg:col-span-3">No courses found.</p>
+        {% endif %}
+        {% endif %}
+
+    </div>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+{# Removed the JavaScript block as filtering is now handled server-side #}
+{% endblock %}

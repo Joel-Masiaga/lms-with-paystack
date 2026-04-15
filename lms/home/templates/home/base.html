@@ -1,0 +1,1528 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+
+       <script>
+        // Immediately execute theme detection before any CSS loads
+        try {
+            const darkMode = localStorage.theme === 'dark' || (!localStorage.theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.classList[darkMode ? 'add' : 'remove']('dark');
+        } catch (e) {}
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}Kuza Ndoto Academy{% endblock %}</title> 
+    <link rel="icon" type="image/png" href="{% static 'home/logo2.png' %}">
+
+    <!-- <link href="{% static 'styles.css' %}" rel="stylesheet"> -->
+     
+         <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#00878d',
+                        'primary-light': '#e0f2f1',
+                        'primary-dark': '#006f74',
+                        'primary-darker': '#005f63',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- HTMX for Dynamic Interactivity -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+
+    
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+   
+    
+    <style>
+        /* --- 1. BRAND & TYPOGRAPHY --- */
+        :root {
+            --color-primary: #00878d;
+            --color-primary-light: #e0f2f1;
+            --color-primary-dark: #006f74;
+            --color-primary-darker: #005f63;
+            --font-family-sans: 'Inter', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-family-sans);
+        }
+
+        /* --- 2. CUSTOM BRAND CLASSES --- */
+        .bg-primary { background-color: var(--color-primary); }
+        .text-primary dark:text-primary-light { color: var(--color-primary); }
+        .border-primary dark:border-primary-light { border-color: var(--color-primary); }
+        .bg-primary-light { background-color: var(--color-primary-light); }
+        .text-primary-darker { color: var(--color-primary-darker); }
+        .hover\:bg-primary-dark:hover { background-color: var(--color-primary-dark); }
+        .focus\:ring-primary:focus { --tw-ring-color: var(--color-primary); }
+
+        /* --- 3. SCROLLBAR --- */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #E5E7EB; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #9CA3AF; border-radius: 4px; }
+        .dark ::-webkit-scrollbar-track { background: #1F2937; }
+        .dark ::-webkit-scrollbar-thumb { background: #4B5563; }
+
+        /* --- 4. L1 SIDEBAR (HOVER EXPAND) --- */
+        #l1-sidebar {
+            width: 5rem;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-x: hidden;
+        }
+        #l1-sidebar:hover { width: 16rem; }
+        .l1-link-text {
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+            white-space: nowrap;
+        }
+        #l1-sidebar:hover .l1-link-text {
+            opacity: 1;
+            transition-delay: 0.1s;
+        }
+        .l1-link-icon { width: 1.75rem; flex-shrink: 0; }
+
+        /* Active Nav Styling (Link Background & Text) */
+        .nav-active {
+            background-color: var(--color-primary-light);
+        }
+        .nav-active .l1-link-icon,
+        .nav-active .l1-link-text,
+        .nav-active span { /* Added span for mobile */
+            color: var(--color-primary);
+        }
+
+        .dark .nav-active {
+            background-color: var(--color-primary);
+        }
+         .dark .nav-active .l1-link-icon,
+         .dark .nav-active .l1-link-text,
+         .dark .nav-active span { /* Added span for mobile */
+            color: white;
+         }
+
+        /* --- 5. LMS/COURSE SPECIFIC STYLES --- */
+        .slide { display: none; }
+        .slide.active { display: block; }
+        .slide-nav:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* Notes panel open/closed transition - pages may rely on this */
+        #notes-panel {
+            max-height: 0;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+        #notes-panel.notes-open { max-height: 20rem; }
+        @media (min-width: 768px) { #notes-panel.notes-open { max-height: 16rem; } }
+
+        /* --- 6. DASHBOARD SPECIFIC STYLES --- */
+        .progress-bar {
+            height: 8px; background-color: #e2e8f0; border-radius: 9999px; overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%; background-color: var(--color-primary); border-radius: 9999px; transition: width 0.3s ease-in-out;
+        }
+        .progress-bar-sm { height: 6px; }
+
+        /* Additional style to ensure body takes height */
+        html, body {
+            height: 100%;
+            overflow: hidden; /* Prevent double scrollbars */
+        }
+        #app-content {
+            height: calc(100vh - 4rem); /* Adjust based on header height */
+        }
+        main {
+            height: 100%;
+        }
+
+         #chatForm { align-items: flex-end; } /* override if form uses items-center */
+        #chatForm textarea {
+            min-height: 40px;
+            max-height: 120px;
+            line-height: 1.25;
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+            box-sizing: border-box;
+            overflow: auto;
+        }
+        /* keep send button vertically centered when textarea small */
+        #chatForm button { align-self: flex-end; }
+
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 h-screen overflow-hidden">
+
+    <div id="toast-stack" class="fixed top-20 right-4 z-[100] space-y-3 max-w-sm w-[calc(100vw-2rem)] sm:w-96" aria-live="polite" aria-atomic="true">
+        {% if messages %}
+            {% for message in messages %}
+                {% with tags=message.tags %}
+                <div class="toast pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-lg shadow-lg border
+                    {% if 'success' in tags %} bg-green-600 text-white border-green-500
+                    {% elif 'error' in tags %} bg-red-600 text-white border-red-500
+                    {% elif 'warning' in tags %} bg-yellow-500 text-white border-yellow-400
+                    {% else %} bg-primary text-white border-primary dark:border-primary-light
+                    {% endif %}">
+                    <div class="shrink-0">
+                        {% if 'success' in tags %}
+                            <i class="fas fa-check-circle"></i>
+                        {% elif 'error' in tags %}
+                            <i class="fas fa-times-circle"></i>
+                        {% elif 'warning' in tags %}
+                            <i class="fas fa-exclamation-triangle"></i>
+                        {% else %}
+                            <i class="fas fa-info-circle"></i>
+                        {% endif %}
+                    </div>
+                    <div class="text-sm font-medium flex-1">{{ message }}</div>
+                    <button class="ml-2 text-white/80 hover:text-white close-toast" aria-label="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                {% endwith %}
+            {% endfor %}
+        {% endif %}
+    </div>
+
+   <div id="mobile-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 hidden md:hidden"></div>
+
+    <header class="fixed top-0 left-0 right-0 h-16 bg-white dark:bg-gray-800 shadow-md z-30 flex items-center justify-between px-4">
+        <div class="flex items-center space-x-4">
+            <button id="mobileL2SidebarToggle" class="text-gray-700 dark:text-gray-200 md:hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 rounded-md p-1 {% block show_mobile_l2_toggle %}hidden{% endblock %}">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+            <div class="flex items-center space-x-2">
+                 <img src="{% static 'home/logo2.png' %}" alt="Kuza Ndoto Academy Logo" class="h-8 w-8 rounded-lg" onerror="this.src='https://placehold.co/32x32/00878d/FFF?text=KN'">
+                 <span class="hidden md:inline text-xl font-bold text-green-900 dark:text-white">Kuza Ndoto Academy</span>
+            </div>
+        </div>
+        <form id="global-search-form" action="{% url 'search' %}" method="get" class="hidden md:flex items-center" role="search">
+            <div class="relative">
+                <input id="global-search-input" type="search" name="q" value="{{ request.GET.q|default:'' }}"
+                       placeholder="Search courses, ebooks, lessons..."
+                       autocomplete="off"
+                       class="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg py-2 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-primary w-64 lg:w-96">
+                <button type="submit" aria-label="Search"
+                        class="absolute right-0 inset-y-0 px-3 rounded-r-lg bg-primary hover:bg-primary-dark text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </form>
+
+        <!-- ── Mobile search toggle icon (visible only on mobile) ─────────── -->
+        <button id="mobileSearchToggle"
+                aria-label="Toggle search"
+                aria-expanded="false"
+                aria-controls="mobile-search-panel"
+                class="md:hidden text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white
+                       focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full
+                       w-9 h-9 flex items-center justify-center transition-colors">
+            <i class="fas fa-search text-base" id="mobileSearchIcon"></i>
+        </button>
+
+        <div class="flex items-center space-x-2 sm:space-x-4">
+
+            <span class="flex items-center text-yellow-500 font-semibold text-xs sm:text-sm gap-1 sm:gap-2 whitespace-nowrap">
+                <i class="fas fa-medal text-base sm:text-lg"></i>
+                <span>
+                    {% if user.is_authenticated %}
+                        {{ user.profile.points|default:0 }}
+                    {% else %} 0
+                    {% endif %} pts
+                </span>
+            </span>
+                                
+            <!-- Notification Bell -->
+            {% if user.is_authenticated %}
+            <div class="relative" id="notificationContainer">
+                <button id="notificationToggle" type="button"
+                        class="relative text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full w-10 h-10 flex items-center justify-center transition-colors"
+                        title="Notifications">
+                    <i class="fas fa-bell text-lg"></i>
+                    {% if unread_notifications_count > 0 %}
+                    <span id="notif-badge" class="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
+                        {% if unread_notifications_count > 9 %}9+{% else %}{{ unread_notifications_count }}{% endif %}
+                    </span>
+                    {% else %}
+                    <span id="notif-badge" class="hidden absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none"></span>
+                    {% endif %}
+                </button>
+
+                <!-- Notification Dropdown -->
+                <div id="notificationDropdown"
+                     class="hidden absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                        <h3 class="text-sm font-bold text-gray-900 dark:text-white">Notifications</h3>
+                        <button type="button" id="markAllReadBtn"
+                                class="text-xs text-primary dark:text-primary-light hover:underline font-medium transition">Mark all as read</button>
+                    </div>
+
+                    <!-- Notification List -->
+                    <div class="max-h-80 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700" id="notif-list">
+                        {% if recent_notifications %}
+                            {% for notif in recent_notifications %}
+                            <a href="{% url 'mark_notification_read' notif.id %}"
+                               class="notif-item flex items-start gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition {% if not notif.is_read %}bg-primary/5 dark:bg-primary/10{% endif %}"
+                               data-id="{{ notif.id }}">
+                                <!-- Icon -->
+                                <div class="flex-shrink-0 mt-0.5">
+                                    {% if notif.notification_type == 'message' %}
+                                        <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                                            <i class="fas fa-comment text-blue-500 text-xs"></i>
+                                        </div>
+                                    {% elif notif.notification_type == 'broadcast' %}
+                                        <div class="w-8 h-8 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
+                                            <i class="fas fa-bullhorn text-teal-500 text-xs"></i>
+                                        </div>
+                                    {% elif notif.notification_type == 'course' %}
+                                        <div class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                                            <i class="fas fa-graduation-cap text-green-500 text-xs"></i>
+                                        </div>
+                                    {% elif notif.notification_type == 'certificate' %}
+                                        <div class="w-8 h-8 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
+                                            <i class="fas fa-certificate text-yellow-500 text-xs"></i>
+                                        </div>
+                                    {% elif notif.notification_type == 'ebook' %}
+                                        <div class="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                                            <i class="fas fa-book text-purple-500 text-xs"></i>
+                                        </div>
+                                    {% else %}
+                                        <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                                            <i class="fas fa-info-circle text-gray-400 text-xs"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <!-- Content -->
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate">{{ notif.title }}</p>
+                                    {% if notif.message %}
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{{ notif.message }}</p>
+                                    {% endif %}
+                                    <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-1">{{ notif.created_at|timesince }} ago</p>
+                                </div>
+                                <!-- Unread dot -->
+                                {% if not notif.is_read %}
+                                <div class="flex-shrink-0 w-2 h-2 bg-primary rounded-full mt-2"></div>
+                                {% endif %}
+                            </a>
+                            {% endfor %}
+                        {% else %}
+                            <div class="px-4 py-8 text-center">
+                                <i class="fas fa-bell-slash text-2xl text-gray-300 dark:text-gray-600 mb-2"></i>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">No notifications yet</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Theme Dropdown Container -->
+            <div class="relative" id="themeDropdownContainer">
+                <button id="themeToggle" type="button" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 rounded-full w-10 h-10 flex items-center justify-center transition-colors">
+                    <i class="fas fa-desktop text-lg"></i>
+                </button>
+                <div id="themeDropdown" class="hidden absolute right-0 mt-2 w-36 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50 transform origin-top-right transition-all">
+                    <button type="button" onclick="setThemeMode('light')" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-primary dark:hover:text-primary-light flex items-center gap-2 transition-colors duration-150">
+                        <i class="fas fa-sun w-5 text-center text-yellow-500"></i> Light
+                    </button>
+                    <button type="button" onclick="setThemeMode('dark')" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-primary dark:hover:text-primary-light flex items-center gap-2 transition-colors duration-150">
+                        <i class="fas fa-moon w-5 text-center"></i> Dark
+                    </button>
+                    <button type="button" onclick="setThemeMode('system')" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-primary dark:hover:text-primary-light flex items-center gap-2 transition-colors duration-150 border-t border-gray-100 dark:border-gray-700 mt-1 pt-2">
+                        <i class="fas fa-desktop w-5 text-center"></i> System
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex items-center relative group">
+
+                {% if user.is_authenticated %}
+                    {% with first_name=user.profile.first_name|default:user.first_name|default:'' last_name=user.profile.last_name|default:user.last_name|default:'' %}
+                    {% if user.profile.image and user.profile.image.url != '/media/default.jpg' %}
+                        <img src="{{ user.profile.image.url }}"  alt="User Avatar" class="h-8 w-8 rounded-full mr-2 border-2 border-transparent hover:border-primary dark:border-primary-light transition-colors cursor-pointer object-cover">
+                    {% else %}
+                        {% with initial_first=first_name.0|default:'' initial_last=last_name.0|default:'' %}
+                            {% if initial_first or initial_last %}
+                                <img src="https://placehold.co/32x32/EFEFEF/777?text={{ initial_first|upper }}{{ initial_last|upper }}" alt="User Avatar" class="h-8 w-8 rounded-full mr-2 border-2 border-transparent hover:border-primary dark:border-primary-light transition-colors cursor-pointer">
+                            {% else %}
+                                <img src="https://placehold.co/32x32/EFEFEF/777?text={{ user.email.0|upper|default:'U' }}" alt="User Avatar" class="h-8 w-8 rounded-full mr-2 border-2 border-transparent hover:border-primary dark:border-primary-light transition-colors cursor-pointer">
+                            {% endif %}
+                        {% endwith %}
+                    {% endif %}
+
+                    {% if first_name or last_name %}
+                        <span class="hidden sm:inline text-green-900 dark:text-white font-medium cursor-pointer">{{ first_name }} {{ last_name }}</span>
+                    {% else %}
+                        <span class="hidden sm:inline text-green-900 dark:text-white font-medium cursor-pointer">{{ user.email|truncatechars:15 }}</span>
+                    {% endif %}
+                    {% endwith %}
+
+                {% else %}
+                     <img src="https://placehold.co/32x32/EFEFEF/777?text=G" alt="Guest Avatar" class="h-8 w-8 rounded-full mr-2 border-2 border-transparent hover:border-primary dark:border-primary-light transition-colors cursor-pointer">
+                    <span class="hidden sm:inline text-gray-900 dark:text-white font-medium cursor-pointer">Guest</span>
+                {% endif %}
+
+        
+            </div>
+
+            <button id="mobileL1SidebarToggle" class="md:hidden text-gray-700 dark:text-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 rounded-md p-1">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+            
+        </div>
+    </header>
+
+    <!-- ── Mobile slide-down search panel ──────────────────────────────────── -->
+    <div id="mobile-search-panel"
+         class="md:hidden fixed left-0 right-0 z-20 bg-white dark:bg-gray-800 shadow-lg
+                border-b border-gray-200 dark:border-gray-700
+                transform -translate-y-full opacity-0 pointer-events-none
+                transition-all duration-300 ease-in-out"
+         style="top:64px;">
+        <div class="px-4 py-3">
+            <form id="mobile-search-form" action="{% url 'search' %}" method="get" role="search" class="flex items-center gap-2">
+                <div class="relative flex-1">
+                    <input id="mobile-search-input"
+                           type="search" name="q"
+                           value="{{ request.GET.q|default:'' }}"
+                           placeholder="Search courses, ebooks, lessons..."
+                           autocomplete="off"
+                           autofocus
+                           class="w-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200
+                                  rounded-xl py-2.5 pl-4 pr-10
+                                  focus:outline-none focus:ring-2 focus:ring-primary text-sm">
+                    <button type="submit" aria-label="Search"
+                            class="absolute right-0 inset-y-0 px-3 rounded-r-xl
+                                   bg-primary hover:bg-primary-dark text-white
+                                   focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                        <i class="fas fa-search text-sm"></i>
+                    </button>
+                </div>
+                <button type="button" id="mobileSearchClose"
+                        aria-label="Close search"
+                        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200
+                               w-9 h-9 flex items-center justify-center flex-shrink-0
+                               rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <nav id="l1-mobile-sidebar" class="fixed top-0 left-0 h-full w-72 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm shadow-lg z-50 transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col md:hidden">
+        <div class="flex items-center justify-between h-16 p-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center space-x-2">
+                <img src="{% static 'home/logo2.png' %}" alt="Kuza Ndoto Academy Logo" class="h-8 w-8 rounded-lg" onerror="this.src='https://placehold.co/32x32/00878d/FFF?text=KN'">
+            </div>
+            <button id="closeL1Sidebar" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-md p-1">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+        </div>
+
+        <!-- Search inside mobile sidebar -->
+        <form action="{% url 'search' %}" method="get" role="search" class="px-2 pt-1 pb-2">
+            <div class="relative">
+                <input type="search" name="q"
+                       value="{{ request.GET.q|default:'' }}"
+                       placeholder="Search..."
+                       autocomplete="off"
+                       class="w-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200
+                              rounded-lg py-2 pl-3 pr-9 text-sm
+                              focus:outline-none focus:ring-2 focus:ring-primary">
+                <button type="submit" aria-label="Search"
+                        class="absolute right-0 inset-y-0 px-2.5 rounded-r-lg
+                               bg-primary hover:bg-primary-dark text-white
+                               focus:outline-none">
+                    <i class="fas fa-search text-xs"></i>
+                </button>
+            </div>
+        </form>
+
+        <div class="flex-1 flex flex-col py-4 space-y-2 px-2 overflow-y-auto">
+
+            <a href="{% url 'home' %}" data-page="home" class="{% if request.resolver_match.url_name == 'home' %}nav-active{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700{% endif %} flex items-center p-3 rounded-lg transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 group">
+                <i class="fas fa-home text-xl w-8 text-center"></i> <span class="ml-4 font-semibold">Dashboard</span>
+            </a>
+            {% if user.is_authenticated %}
+            <a href="{% url 'courses' %}" data-page="my-courses" class="{% if request.resolver_match.url_name == 'courses' or request.resolver_match.url_name == 'course_detail' or request.resolver_match.url_name == 'lesson_detail' or request.resolver_match.url_name == 'module_detail' or request.resolver_match.url_name == 'quiz_detail' %}nav-active{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700{% endif %} flex items-center p-3 rounded-lg transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 group">
+                <i class="fas fa-graduation-cap text-xl w-8 text-center"></i> <span class="ml-4 font-semibold">My Courses</span>
+            </a>
+            {% endif %}
+            <a href="{% url 'certificate_list' %}" data-page="certificates" class="{% if request.resolver_match.url_name == 'certificate_list' %}nav-active{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700{% endif %} flex items-center p-3 rounded-lg transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 group">
+                <i class="fas fa-certificate text-xl w-8 text-center"></i> <span class="ml-4 font-semibold">Certificates</span>
+            </a>
+            <a href="{% url 'ebook_list' %}" data-page="ebooks" class="{% if request.resolver_match.url_name == 'ebook_list' or request.resolver_match.url_name == 'ebook_detail' %}nav-active{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700{% endif %} flex items-center p-3 rounded-lg transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 group">
+                <i class="fas fa-book text-xl w-8 text-center"></i> <span class="ml-4 font-semibold">eBooks</span>
+            </a>
+            <a href="{% url 'quiz_list' %}" data-page="quizzes" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center p-3 rounded-lg transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 group">
+                <i class="fas fa-list-check text-xl w-8 text-center"></i> <span class="ml-4 font-semibold">Quizzes</span>
+            </a>
+
+            {% if user.is_authenticated %}
+            <div class="pt-2 mt-2 border-t border-gray-200 dark:border-gray-700">
+                <p class="px-3 pb-1 text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Community</p>
+                <a href="{% url 'conversation_list' %}" data-page="messages" class="{% if request.resolver_match.url_name == 'conversation_list' or request.resolver_match.url_name == 'conversation_detail' %}nav-active{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700{% endif %} flex items-center p-3 rounded-lg transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 group">
+                    <i class="fas fa-comments text-xl w-8 text-center"></i> <span class="ml-4 font-semibold">Messages</span>
+                </a>
+                <a href="{% url 'community_hub' %}" data-page="community" class="{% if request.resolver_match.url_name == 'community_hub' or request.resolver_match.url_name == 'user_directory' or request.resolver_match.url_name == 'group_list' or request.resolver_match.url_name == 'group_detail' or request.resolver_match.url_name == 'create_group' or request.resolver_match.url_name == 'group_discovery' or request.resolver_match.url_name == 'group_invitations' %}nav-active{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700{% endif %} flex items-center p-3 rounded-lg transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 group">
+                    <i class="fas fa-people-arrows text-xl w-8 text-center"></i> <span class="ml-4 font-semibold">Community</span>
+                </a>
+                {% if user.role == 'instructor' %}
+                <a href="{% url 'course_broadcast' %}" data-page="broadcast" class="{% if request.resolver_match.url_name == 'course_broadcast' or request.resolver_match.url_name == 'course_broadcasts' %}nav-active{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700{% endif %} flex items-center p-3 rounded-lg transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 group">
+                    <i class="fas fa-bullhorn text-xl w-8 text-center"></i> <span class="ml-4 font-semibold">Broadcast</span>
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if user.is_authenticated and user.role == 'instructor' %}
+            <div class="pt-2 mt-2 border-t border-gray-200 dark:border-gray-700">
+                <p class="px-3 pb-1 text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Instructor</p>
+                <a href="{% url 'instructor_course_list' %}" data-page="manage-courses" class="{% if request.resolver_match.url_name == 'instructor_course_list' or request.resolver_match.url_name == 'instructor_course_detail' or request.resolver_match.url_name == 'instructor_module_detail' or request.resolver_match.url_name == 'instructor_lesson_detail' or request.resolver_match.url_name == 'create_course' %}nav-active{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700{% endif %} flex items-center p-3 rounded-lg transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 group">
+                    <i class="fas fa-chalkboard-teacher text-xl w-8 text-center"></i> <span class="ml-4 font-semibold">Manage Courses</span>
+                </a>
+
+            </div>
+            {% endif %}
+
+            {% if user.is_authenticated and user.is_superuser %}
+            <div class="pt-2 mt-2 border-t border-gray-200 dark:border-gray-700">
+                <p class="px-3 pb-1 text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Administration</p>
+                <a href="{% url 'admin_dashboard' %}" data-page="admin" class="{% if request.resolver_match.url_name == 'admin_dashboard' or request.resolver_match.url_name == 'user_management' or request.resolver_match.url_name == 'user_rights_management' %}nav-active{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700{% endif %} flex items-center p-3 rounded-lg transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 group">
+                    <i class="fas fa-chart-line text-xl w-8 text-center"></i> <span class="ml-4 font-semibold">Admin Dashboard</span>
+                </a>
+                <a href="{% url 'promotional_email' %}" data-page="promotional-email" class="{% if request.resolver_match.url_name == 'promotional_email' or request.resolver_match.url_name == 'promotional_email_preview' or request.resolver_match.url_name == 'promotional_email_history' %}nav-active{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700{% endif %} flex items-center p-3 rounded-lg transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 group">
+                    <i class="fas fa-rocket text-xl w-8 text-center"></i> <span class="ml-4 font-semibold">Promotional Email</span>
+                </a>
+            </div>
+            {% endif %}
+
+        <div class="py-4 space-y-2 px-2 border-t border-gray-200 dark:border-gray-700">
+            {% if user.is_authenticated %}
+            <a href="{% url 'profile' %}" data-page="settings" class="{% if request.resolver_match.url_name == 'profile' %}nav-active{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700{% endif %} flex items-center p-3 rounded-lg transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 group">
+                <i class="fas fa-cog text-xl w-8 text-center"></i> <span class="ml-4 font-semibold">Settings</span>
+            </a>
+            <form action="{% url 'logout' %}" method="post" class="w-full">
+                {% csrf_token %}
+                <button type="submit" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center p-3 rounded-lg transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 group w-full">
+                    <i class="fas fa-sign-out-alt text-xl w-8 text-center"></i> <span class="ml-4 font-semibold">Logout</span>
+                </button>
+            </form>
+            {% else %}
+           <a href="{% url 'login' %}" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center p-3 rounded-lg transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 group">
+                <i class="fas fa-sign-in-alt text-xl w-8 text-center"></i> <span class="ml-4 font-semibold">Login</span>
+            </a>
+            {% endif %}
+        </div>
+    </nav>
+    <div class="flex h-screen pt-16">
+
+        <nav id="l1-sidebar" class="bg-white dark:bg-gray-800 flex-shrink-0 flex-col py-4 space-y-2 shadow-lg z-20 hidden md:flex">
+             <a href="{% url 'home' %}" data-page="home" title="Dashboard" class="l1-link {% if request.resolver_match.url_name == 'home' %}nav-active{% else %}text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700{% endif %} flex items-center p-3 rounded-lg transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 group">
+                 <i class="fas fa-home text-xl l1-link-icon text-center"></i> <span class="ml-4 font-semibold l1-link-text">Dashboard</span>
+            </a>
+            {% if user.is_authenticated %}
+            <a href="{% url 'courses' %}" data-page="my-courses" title="My Courses" class="l1-link {% if request.resolver_match.url_name == 'courses' or request.resolver_match.url_name == 'course_detail' or request.resolver_match.url_name == 'lesson_detail' or request.resolver_match.url_name == 'module_detail' or request.resolver_match.url_name == 'quiz_detail' %}nav-active{% else %}text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700{% endif %} flex items-center p-3 rounded-lg transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 group">
+                 <i class="fas fa-graduation-cap text-xl l1-link-icon text-center"></i> <span class="ml-4 font-semibold l1-link-text">My Courses</span>
+            </a>
+            {% endif %}
+            <a href="{% url 'certificate_list' %}" data-page="certificates" title="Certificates" class="l1-link {% if request.resolver_match.url_name == 'certificate_list' %}nav-active{% else %}text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700{% endif %} flex items-center p-3 rounded-lg transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 group">
+                 <i class="fas fa-certificate text-xl l1-link-icon text-center"></i> <span class="ml-4 font-semibold l1-link-text">Certificates</span>
+             </a>
+            <a href="{% url 'ebook_list' %}" data-page="ebooks" title="eBooks" class="l1-link {% if request.resolver_match.url_name == 'ebook_list' or request.resolver_match.url_name == 'ebook_detail' %}nav-active{% else %}text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700{% endif %} flex items-center p-3 rounded-lg transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 group">
+                 <i class="fas fa-book text-xl l1-link-icon text-center"></i> <span class="ml-4 font-semibold l1-link-text">eBooks</span>
+            </a>
+
+             <a href="{% url 'quiz_list' %}" data-page="quizzes" title="Quizzes" class="l1-link text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center p-3 rounded-lg transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 group">
+                 <i class="fas fa-list-check text-xl l1-link-icon text-center"></i> <span class="ml-4 font-semibold l1-link-text">Quizzes</span>
+             </a>
+
+             {% if user.is_authenticated %}
+             <div class="my-2 border-t border-gray-200 dark:border-gray-700"></div>
+             <a href="{% url 'conversation_list' %}" data-page="messages" title="Messages" class="l1-link {% if request.resolver_match.url_name == 'conversation_list' or request.resolver_match.url_name == 'conversation_detail' %}nav-active{% else %}text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700{% endif %} flex items-center p-3 rounded-lg transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 group">
+                 <i class="fas fa-comments text-xl l1-link-icon text-center"></i> <span class="ml-4 font-semibold l1-link-text">Messages</span>
+             </a>
+             <a href="{% url 'community_hub' %}" data-page="community" title="Community" class="l1-link {% if request.resolver_match.url_name == 'community_hub' or request.resolver_match.url_name == 'user_directory' or request.resolver_match.url_name == 'group_list' or request.resolver_match.url_name == 'group_detail' or request.resolver_match.url_name == 'create_group' or request.resolver_match.url_name == 'group_discovery' or request.resolver_match.url_name == 'group_invitations' %}nav-active{% else %}text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700{% endif %} flex items-center p-3 rounded-lg transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 group">
+                 <i class="fas fa-people-arrows text-xl l1-link-icon text-center"></i> <span class="ml-4 font-semibold l1-link-text">Community</span>
+             </a>
+             {% if user.role == 'instructor' %}
+             <a href="{% url 'course_broadcast' %}" data-page="broadcast" title="Broadcast" class="l1-link {% if request.resolver_match.url_name == 'course_broadcast' or request.resolver_match.url_name == 'course_broadcasts' %}nav-active{% else %}text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700{% endif %} flex items-center p-3 rounded-lg transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 group">
+                 <i class="fas fa-bullhorn text-xl l1-link-icon text-center"></i> <span class="ml-4 font-semibold l1-link-text">Broadcast</span>
+             </a>
+             {% endif %}
+             {% endif %}
+
+             {% if user.is_authenticated and user.role == 'instructor' %}
+             <div class="my-2 border-t border-gray-200 dark:border-gray-700"></div>
+             <a href="{% url 'instructor_course_list' %}" data-page="manage-courses" title="Manage Courses" class="l1-link {% if request.resolver_match.url_name == 'instructor_course_list' or request.resolver_match.url_name == 'instructor_course_detail' or request.resolver_match.url_name == 'instructor_module_detail' or request.resolver_match.url_name == 'instructor_lesson_detail' or request.resolver_match.url_name == 'create_course' %}nav-active{% else %}text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700{% endif %} flex items-center p-3 rounded-lg transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 group">
+                 <i class="fas fa-chalkboard-teacher text-xl l1-link-icon text-center"></i> <span class="ml-4 font-semibold l1-link-text">Manage Courses</span>
+             </a>
+
+             {% endif %}
+
+             {% if user.is_authenticated and user.is_superuser %}
+             <div class="my-2 border-t border-gray-200 dark:border-gray-700"></div>
+             <a href="{% url 'admin_dashboard' %}" data-page="admin" title="Admin Dashboard" class="l1-link {% if request.resolver_match.url_name == 'admin_dashboard' or request.resolver_match.url_name == 'user_management' or request.resolver_match.url_name == 'user_rights_management' %}nav-active{% else %}text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700{% endif %} flex items-center p-3 rounded-lg transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 group">
+                 <i class="fas fa-chart-line text-xl l1-link-icon text-center"></i> <span class="ml-4 font-semibold l1-link-text">Admin Dashboard</span>
+             </a>
+             <a href="{% url 'promotional_email' %}" data-page="promotional-email" title="Promotional Email" class="l1-link {% if request.resolver_match.url_name == 'promotional_email' or request.resolver_match.url_name == 'promotional_email_preview' or request.resolver_match.url_name == 'promotional_email_history' %}nav-active{% else %}text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700{% endif %} flex items-center p-3 rounded-lg transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 group">
+                 <i class="fas fa-rocket text-xl l1-link-icon text-center"></i> <span class="ml-4 font-semibold l1-link-text">Promotional Email</span>
+             </a>
+             {% endif %}
+
+             <div class="flex-grow"></div> {% if user.is_authenticated %}
+              <a href="{% url 'profile' %}" data-page="settings" title="Settings" class="l1-link {% if request.resolver_match.url_name == 'profile' %}nav-active{% else %}text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700{% endif %} flex items-center p-3 rounded-lg transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 group">
+                 <i class="fas fa-cog text-xl l1-link-icon text-center"></i> <span class="ml-4 font-semibold l1-link-text">Settings</span>
+              </a>
+              <form action="{% url 'logout' %}" method="post" class="w-full">
+                  {% csrf_token %}
+                  <button type="submit" title="Logout" class="l1-link text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center p-3 rounded-lg transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 group w-full">
+                      <i class="fas fa-sign-out-alt text-xl l1-link-icon text-center"></i> <span class="ml-4 font-semibold l1-link-text">Logout</span>
+                  </button>
+              </form>
+             {% else %}
+                 <a href="{% url 'login' %}" title="Login" class="l1-link text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center p-3 rounded-lg transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 group">
+                    <i class="fas fa-sign-in-alt text-xl l1-link-icon text-center"></i> <span class="ml-4 font-semibold l1-link-text">Login</span>
+                 </a>
+             {% endif %}
+        </nav>
+
+        <div id="app-content" class="flex-1 flex flex-col overflow-hidden bg-gray-100 dark:bg-gray-900">
+             {% block content %}
+             <main class="flex-1 p-4 sm:p-6 overflow-y-auto">
+                 <div class="flex-1 flex items-center justify-center h-full">
+                     <i class="fas fa-spinner fa-spin text-primary dark:text-primary-light text-4xl"></i>
+                 </div>
+             </main>
+             {% endblock %}
+        </div>
+    </div>
+
+
+    <div class="fixed bottom-6 right-6 z-50">
+  <button id="chatbotToggle"
+          class="bg-primary hover:bg-primary-dark text-white w-14 h-14 rounded-full shadow-lg ring-2 ring-white/70 flex items-center justify-center">
+    <i class="fas fa-robot text-2xl"></i>
+  </button>
+</div>
+
+<div id="chatbotBox"
+     class="hidden fixed bottom-16 sm:bottom-20 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-96 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
+  
+  <!-- Header: Reduced padding, icon size, font size, and close button size for mobile -->
+  <div class="flex items-center p-2 sm:p-4 bg-primary text-white">
+    <span class="inline-flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-primary-dark ring-2 ring-white/70">
+      <i class="fas fa-robot text-base sm:text-lg"></i>
+    </span>
+    <div class="ml-2 sm:ml-3">
+      <h4 class="text-sm sm:text-base font-semibold leading-tight">Revise with Tabby</h4>
+      <p class="text-xs text-white/80">Your study buddy</p>
+    </div>
+    <button id="closeChatbot"
+            class="ml-auto inline-flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-md hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+            aria-label="Close chatbot">
+      <i class="fas fa-times text-base sm:text-lg"></i>
+    </button>
+  </div>
+
+  <!-- Chat Area: Reduced height and welcome message size for mobile -->
+  <div class="p-2 sm:p-4 space-y-2 sm:space-y-3 h-60 sm:h-64 overflow-y-auto bg-gray-50 dark:bg-gray-800">
+    <p class="text-white text-xs sm:text-sm font-semibold text-center py-1.5 sm:py-2 rounded-md bg-primary shadow-sm">
+      How can I help you today?
+    </p>
+    <p class="text-xs text-gray-500 dark:text-gray-400 text-center">Powered by Gemini</p>
+    <div id="chatMessages" class="space-y-2 sm:space-y-3"></div>
+  </div>
+
+  <!-- Form: Reduced padding, gap, textarea padding, and button size for mobile -->
+  <form id="chatForm" class="flex items-end gap-1.5 sm:gap-2 p-2 sm:p-3 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+    {% csrf_token %}
+    <textarea id="userInput" rows="1" placeholder="Ask me a question..."
+              class="flex-1 resize-none px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400 ring-1 ring-gray-300 dark:ring-gray-600 focus:ring-2 focus:ring-primary focus:outline-none"></textarea>
+    <button type="submit"
+            class="shrink-0 inline-flex items-center justify-center h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-primary hover:bg-primary-dark text-white shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+            aria-label="Send">
+      <i class="fas fa-paper-plane text-sm"></i>
+    </button>
+  </form>
+</div>
+
+<script>
+// Chatbot controller script
+(function () {
+  const toggleBtn = document.getElementById('chatbotToggle');
+  const box = document.getElementById('chatbotBox');
+  const closeBtn = document.getElementById('closeChatbot');
+  const form = document.getElementById('chatForm');
+  const input = document.getElementById('userInput');
+  const messages = document.getElementById('chatMessages');
+
+  if (!toggleBtn || !box || !form || !input || !messages) return;
+
+  const endpoint =
+    window.CHATBOT_ENDPOINT ||
+    form.getAttribute('action') ||
+    '/chatbot/'; // default; if your URL is different, set window.CHATBOT_ENDPOINT
+
+  function getCsrfToken() {
+    // Prefer token from form input rendered by {% csrf_token %}
+    const el = form.querySelector('input[name=csrfmiddlewaretoken]');
+    if (el && el.value) return el.value;
+    // Fallback to cookie
+    const name = 'csrftoken';
+    const cookies = document.cookie ? document.cookie.split(';') : [];
+    for (let c of cookies) {
+      c = c.trim();
+      if (c.startsWith(name + '=')) return decodeURIComponent(c.substring(name.length + 1));
+    }
+    return '';
+  }
+
+  function scrollToBottom() {
+    const container = box.querySelector('.h-64.overflow-y-auto') || box;
+    container.scrollTop = container.scrollHeight;
+  }
+
+  function bubble(html, role) {
+    const wrap = document.createElement('div');
+    // Simple styling for user vs bot
+    if (role === 'user') {
+      wrap.className = 'flex justify-end';
+      wrap.innerHTML =
+        '<div class="max-w-[85%] bg-blue-600 text-white text-sm px-3 py-2 rounded-lg shadow">' +
+        escapeHtml(html) +
+        '</div>';
+    } else if (role === 'bot') {
+      wrap.className = 'flex justify-start';
+      wrap.innerHTML =
+        '<div class="max-w-[85%] bg-gray-700 text-gray-100 text-sm px-3 py-2 rounded-lg shadow">' +
+        html +
+        '</div>';
+    } else {
+      // pending/loading
+      wrap.className = 'flex justify-start';
+      wrap.innerHTML =
+        '<div class="max-w-[85%] bg-gray-700 text-gray-200 text-sm px-3 py-2 rounded-lg shadow flex items-center gap-2">' +
+        '<span class="inline-block h-2 w-2 rounded-full bg-gray-300 animate-bounce" style="animation-delay:0ms"></span>' +
+        '<span class="inline-block h-2 w-2 rounded-full bg-gray-300 animate-bounce" style="animation-delay:120ms"></span>' +
+        '<span class="inline-block h-2 w-2 rounded-full bg-gray-300 animate-bounce" style="animation-delay:240ms"></span>' +
+        '<span class="ml-1">Thinking…</span>' +
+        '</div>';
+    }
+    messages.appendChild(wrap);
+    scrollToBottom();
+    return wrap;
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
+
+  function autosize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(120, el.scrollHeight) + 'px';
+  }
+
+  // Toggle open/close
+  toggleBtn.addEventListener('click', () => {
+    box.classList.toggle('hidden');
+    if (!box.classList.contains('hidden')) {
+      input.focus();
+      scrollToBottom();
+    }
+  });
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => box.classList.add('hidden'));
+  }
+
+  // Submit handler
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
+
+    // Show user's message
+    bubble(text, 'user');
+    // Clear input
+    input.value = '';
+    autosize(input);
+
+    // Pending bubble
+    const pending = bubble('', 'pending');
+
+    // Build payload: prefer 'prompt' param for compatibility with your view
+    const params = new URLSearchParams();
+    params.set('prompt', text);
+
+    // Optional lesson_id support (set data-lesson-id on body or container if available)
+    const lessonId =
+      document.body.getAttribute('data-lesson-id') ||
+      box.getAttribute('data-lesson-id') ||
+      null;
+    if (lessonId) params.set('lesson_id', lessonId);
+
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCsrfToken(),
+          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+          'Accept': 'application/json',
+        },
+        body: params.toString(),
+        credentials: 'same-origin',
+      });
+
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        data = { error: 'Invalid server response.' };
+      }
+
+      // Replace pending with bot reply
+      pending.remove();
+
+      if (!res.ok || data.error) {
+        const msg = data.error || `Error ${res.status}. Please try again.`;
+        bubble(escapeHtml(msg), 'bot');
+        return;
+      }
+
+      // Server returns HTML in data.response (Markdown already converted)
+      bubble(data.response || 'No response.', 'bot');
+    } catch (err) {
+      pending.remove();
+      bubble('Network error. Please check your connection and try again.', 'bot');
+    }
+  });
+
+  // Autosize textarea and Enter-to-send
+  input.addEventListener('input', () => autosize(input));
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    }
+  });
+
+  // Initialize autosize
+  autosize(input);
+})();
+</script>
+    
+    <script>
+    // Theme Toggle Handler (Dropdown Version)
+    (function() {
+        const themeToggle = document.getElementById('themeToggle');
+        const themeDropdown = document.getElementById('themeDropdown');
+        const themeDropdownContainer = document.getElementById('themeDropdownContainer');
+        if (!themeToggle || !themeDropdown) return;
+
+        // Apply theme and update UI
+        function updateTheme() {
+            const theme = localStorage.theme;
+            const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const icon = themeToggle.querySelector('i');
+            
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                icon.className = 'fas fa-moon text-lg';
+                themeToggle.setAttribute('title', 'Mode: Dark');
+            } else if (theme === 'light') {
+                document.documentElement.classList.remove('dark');
+                icon.className = 'fas fa-sun text-lg text-yellow-500';
+                themeToggle.setAttribute('title', 'Mode: Light');
+            } else {
+                // System default
+                if (isSystemDark) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+                icon.className = 'fas fa-desktop text-lg';
+                themeToggle.setAttribute('title', 'Mode: System');
+            }
+            
+            // Dispatch a custom event in case other scripts need to know about theme changes
+            window.dispatchEvent(new Event('themeChanged'));
+        }
+
+        // Handle dropdown visibility
+        themeToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            themeDropdown.classList.toggle('hidden');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (themeDropdownContainer && !themeDropdownContainer.contains(e.target)) {
+                themeDropdown.classList.add('hidden');
+            }
+        });
+
+        // Expose global function for the inline onclick handlers in the dropdown
+        window.setThemeMode = function(mode) {
+            if (mode === 'system') {
+                localStorage.removeItem('theme');
+            } else {
+                localStorage.theme = mode;
+            }
+            updateTheme();
+            themeDropdown.classList.add('hidden');
+        };
+
+        // Initialize state
+        updateTheme();
+
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            if (!localStorage.theme) {
+                updateTheme();
+            }
+        });
+    })();
+</script>
+
+    <script>
+        (function () {
+            const stack = document.getElementById('toast-stack');
+            if (!stack) return;
+
+            // Close on click
+            stack.querySelectorAll('.close-toast').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const toast = btn.closest('.toast');
+                    if (!toast) return;
+                    toast.style.transition = 'opacity .3s ease, transform .3s ease';
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(-6px)';
+                    setTimeout(() => toast.remove(), 320);
+                });
+            });
+
+            // Auto-remove after 3.5s (staggered)
+            const toasts = Array.from(stack.querySelectorAll('.toast'));
+            toasts.forEach((t, i) => {
+                setTimeout(() => {
+                    t.style.transition = 'opacity .3s ease, transform .3s ease';
+                    t.style.opacity = '0';
+                    t.style.transform = 'translateY(-6px)';
+                    setTimeout(() => t.remove(), 320);
+                }, 3500 + i * 300);
+            });
+        })();
+    </script>
+
+    <script>
+    // Mobile Menu & Search Handlers
+    (function() {
+        const mobileL1Toggle = document.getElementById('mobileL1SidebarToggle');
+        const mobileL1Sidebar = document.getElementById('l1-mobile-sidebar');
+        const closeL1Btn = document.getElementById('closeL1Sidebar');
+        const mobileOverlay = document.getElementById('mobile-overlay');
+
+        // Mobile Search Elements
+        const mobileSearchToggle = document.getElementById('mobileSearchToggle');
+        const mobileSearchPanel = document.getElementById('mobile-search-panel');
+        const mobileSearchClose = document.getElementById('mobileSearchClose');
+        const mobileSearchIcon = document.getElementById('mobileSearchIcon');
+        const mobileSearchInput = document.getElementById('mobile-search-input');
+
+        /* -- Sidebar Menu -- */
+        function openMobileMenu() {
+            mobileL1Sidebar.classList.remove('-translate-x-full');
+            mobileOverlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            closeMobileSearch(); // Ensure search is closed when menu opens
+        }
+
+        function closeMobileMenu() {
+            mobileL1Sidebar.classList.add('-translate-x-full');
+            mobileOverlay.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        if (mobileL1Toggle) mobileL1Toggle.addEventListener('click', openMobileMenu);
+        if (closeL1Btn) closeL1Btn.addEventListener('click', closeMobileMenu);
+        if (mobileOverlay) mobileOverlay.addEventListener('click', closeMobileMenu);
+
+        /* -- Mobile Search Panel -- */
+        let searchOpen = false;
+
+        function openMobileSearch() {
+            searchOpen = true;
+            mobileSearchPanel.classList.remove('-translate-y-full', 'opacity-0', 'pointer-events-none');
+            mobileSearchPanel.classList.add('translate-y-0', 'opacity-100', 'pointer-events-auto');
+            mobileSearchIcon.classList.remove('fa-search');
+            mobileSearchIcon.classList.add('fa-times');
+            mobileSearchToggle.setAttribute('aria-expanded', 'true');
+            // Slight delay so input focus occurs after animation
+            setTimeout(() => { if (mobileSearchInput) mobileSearchInput.focus(); }, 150);
+        }
+
+        function closeMobileSearch() {
+            searchOpen = false;
+            mobileSearchPanel.classList.remove('translate-y-0', 'opacity-100', 'pointer-events-auto');
+            // Slight delay before making input unclickable so the slide-up animation isn't abrupt on touches
+            mobileSearchPanel.classList.add('-translate-y-full', 'opacity-0', 'pointer-events-none');
+            mobileSearchIcon.classList.remove('fa-times');
+            mobileSearchIcon.classList.add('fa-search');
+            mobileSearchToggle.setAttribute('aria-expanded', 'false');
+            if (mobileSearchInput) mobileSearchInput.blur();
+        }
+
+        if (mobileSearchToggle) {
+            mobileSearchToggle.addEventListener('click', () => {
+                if (searchOpen) closeMobileSearch(); else openMobileSearch();
+            });
+        }
+        
+        if (mobileSearchClose) {
+            mobileSearchClose.addEventListener('click', closeMobileSearch);
+        }
+
+        // Close search if clicking anywhere outside the panel and toggle button
+        document.addEventListener('click', (e) => {
+            if (searchOpen && mobileSearchPanel && mobileSearchToggle) {
+                if (!mobileSearchPanel.contains(e.target) && !mobileSearchToggle.contains(e.target)) {
+                    closeMobileSearch();
+                }
+            }
+        });
+
+        // Close menus/search on wider screens or scroll
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 768) { // md breakpoint
+                closeMobileMenu();
+                closeMobileSearch();
+            }
+        });
+        
+        // Auto-close search on downward scroll (optional refinement)
+        let lastScrollY = window.scrollY;
+        window.addEventListener('scroll', () => {
+            if (searchOpen && window.scrollY > lastScrollY + 20) closeMobileSearch();
+            lastScrollY = window.scrollY;
+        }, { passive: true });
+
+    })();
+</script>
+
+    {% block extra_js %}{% endblock %}
+
+    {% if user.is_authenticated %}{% if not user.profile.has_seen_tour %}
+    <!-- ───── Onboarding Tour (Driver.js) ───── -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.css"/>
+    <style>
+      /* Polished, responsive Driver.js overrides */
+      .driver-popover {
+        max-width: min(360px, calc(100vw - 20px)) !important;
+        border-radius: 16px !important;
+        box-shadow: 0 24px 64px rgba(0,0,0,0.22) !important;
+        padding: 20px 22px 16px !important;
+        font-family: 'Inter', sans-serif !important;
+      }
+      .driver-popover-title {
+        font-size: 1rem !important;
+        font-weight: 700 !important;
+        margin-bottom: 6px !important;
+        color: #0f172a !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+      }
+      .driver-popover-description {
+        font-size: 0.875rem !important;
+        line-height: 1.6 !important;
+        color: #374151 !important;
+      }
+      .driver-popover-footer {
+        margin-top: 16px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+      }
+      /* ── Progress counter ── */
+      .driver-popover-progress-text {
+        font-size: 0.78rem !important;
+        font-weight: 700 !important;
+        color: #00878d !important;
+        background: #e0f2f1 !important;
+        padding: 3px 10px !important;
+        border-radius: 99px !important;
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+      }
+      /* ── Buttons ── */
+      .driver-popover-navigation-btns {
+        display: flex !important;
+        gap: 8px !important;
+        flex-wrap: nowrap !important;
+      }
+      .driver-popover-prev-btn {
+        padding: 6px 14px !important;
+        border-radius: 8px !important;
+        font-size: 0.8rem !important;
+        border: 1px solid #d1d5db !important;
+        background: transparent !important;
+        color: #374151 !important;
+        cursor: pointer !important;
+      }
+      .driver-popover-next-btn {
+        padding: 6px 16px !important;
+        border-radius: 8px !important;
+        font-size: 0.8rem !important;
+        background: #00878d !important;
+        color: #fff !important;
+        border: none !important;
+        font-weight: 600 !important;
+        cursor: pointer !important;
+      }
+      .driver-popover-next-btn:hover { background: #006f74 !important; }
+      .driver-popover-close-btn {
+        color: #9ca3af !important;
+        font-size: 1.1rem !important;
+        padding: 0 !important;
+        background: none !important;
+        border: none !important;
+        cursor: pointer !important;
+        position: absolute !important;
+        top: 14px !important;
+        right: 16px !important;
+      }
+      .driver-popover-close-btn:hover { color: #374151 !important; }
+      /* Dark-mode adaptations */
+      .dark .driver-popover { background: #1f2937 !important; border: 1px solid #374151 !important; }
+      .dark .driver-popover-title { color: #f1f5f9 !important; }
+      .dark .driver-popover-description { color: #d1d5db !important; }
+      .dark .driver-popover-prev-btn { border-color: #4b5563 !important; color: #d1d5db !important; }
+      .dark .driver-popover-close-btn { color: #6b7280 !important; }
+      .dark .driver-popover-progress-text { background: #064e3b !important; color: #34d399 !important; }
+      @media (max-width: 640px) {
+        .driver-popover { padding: 18px 16px 14px !important; }
+        .driver-popover-title { font-size: 0.95rem !important; }
+      }
+      /* Celebration modal animations */
+      @keyframes kza-fadeIn  { from { opacity:0 } to { opacity:1 } }
+      @keyframes kza-fadeOut { from { opacity:1 } to { opacity:0 } }
+      @keyframes kza-popIn   { from { transform:scale(.4) translateY(40px); opacity:0 } to { transform:scale(1) translateY(0); opacity:1 } }
+      @keyframes kza-float   { 0%,100% { transform:translateY(0) } 50% { transform:translateY(-10px) } }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.js.iife.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <!-- Pass Django URL to JS before entering verbatim block -->
+    <script>var _TOUR_URL = "{% url 'mark_tour_seen' %}";</script>
+    {% verbatim %}
+    <script>
+    (function () {
+      function getCsrf() {
+        var m = document.cookie.match(/csrftoken=([^;]+)/);
+        return m ? m[1] : '';
+      }
+      function markDone() {
+        fetch(_TOUR_URL, {
+          method: 'POST', credentials: 'same-origin',
+          headers: { 'X-CSRFToken': getCsrf(), 'Content-Type': 'application/json' }
+        }).catch(function () {});
+      }
+
+      document.addEventListener('DOMContentLoaded', function () {
+        var d = window.driver.js.driver;
+        var mobile = window.innerWidth < 768;
+
+        /* ── Mobile sidebar helpers ─────────────────────────────────────────
+           We suppress the CSS transition so Driver.js measures the element
+           position AFTER the sidebar is fully open (no timing race).        */
+        var mobileSidebar = document.getElementById('l1-mobile-sidebar');
+        var mobileOverlay = document.getElementById('mobile-overlay');
+
+        function openDrawerInstant() {
+          if (!mobileSidebar) return;
+          mobileSidebar.style.transition = 'none';
+          mobileSidebar.classList.remove('-translate-x-full');
+          /* re-enable transition after Driver.js has had a frame to measure */
+          requestAnimationFrame(function () {
+            mobileSidebar.style.transition = '';
+          });
+        }
+        function closeDrawerInstant() {
+          if (!mobileSidebar) return;
+          mobileSidebar.style.transition = 'none';
+          mobileSidebar.classList.add('-translate-x-full');
+          if (mobileOverlay) mobileOverlay.classList.add('hidden');
+          requestAnimationFrame(function () {
+            mobileSidebar.style.transition = '';
+          });
+        }
+
+        /* ── Element selector helpers ────────────────────────────────────── */
+        function exists(sel) {
+          return sel && !!document.querySelector(sel);
+        }
+
+        /* On desktop scope to #l1-sidebar; on mobile scope to #l1-mobile-sidebar.
+           The mobile drawer IS in the DOM — we open it before Driver.js highlights. */
+        function sidebarItem(page) {
+          return mobile
+            ? '#l1-mobile-sidebar [data-page="' + page + '"]'
+            : '#l1-sidebar [data-page="' + page + '"]';
+        }
+
+        /* ── Steps ─────────────────────────────────────────────────────────
+           Each step carries a custom `_mobileDrawer` flag so the global
+           onHighlightStarted callback knows whether to open or close the drawer. */
+        var steps = [
+          {
+            _mobileDrawer: false,
+            element: mobile ? '#mobileL1SidebarToggle' : '#l1-sidebar',
+            popover: {
+              title: '👋 Welcome to Kuza Ndoto Academy!',
+              description: mobile
+                ? 'This is the <strong>menu button</strong>. The tour will now open the navigation so you can see each section highlighted.'
+                : 'This is your <strong>navigation sidebar</strong>. Hover over it to expand and reach every section of the platform.',
+              side: mobile ? 'bottom' : 'right', align: 'start'
+            }
+          },
+          {
+            _mobileDrawer: true,
+            element: sidebarItem('my-courses'),
+            popover: {
+              title: '🎓 My Courses',
+              description: 'Browse all your <strong>enrolled courses</strong> — each with structured modules, video lessons, PDFs, quizzes, and a certificate on completion.',
+              side: 'right', align: 'center'
+            }
+          },
+          {
+            _mobileDrawer: true,
+            element: sidebarItem('certificates'),
+            popover: {
+              title: '🏆 Certificates',
+              description: 'After finishing a course your <strong>certificate is auto-generated</strong> here. Download it as a PDF to share on LinkedIn or with employers.',
+              side: 'right', align: 'center'
+            }
+          },
+          {
+            _mobileDrawer: true,
+            element: sidebarItem('ebooks'),
+            popover: {
+              title: '📚 eBooks',
+              description: 'Read <strong>supplementary eBooks</strong> right inside the platform with our built-in PDF viewer — no downloads required.',
+              side: 'right', align: 'center'
+            }
+          },
+          {
+            _mobileDrawer: true,
+            element: sidebarItem('quizzes'),
+            popover: {
+              title: '✅ Quizzes',
+              description: 'Test your knowledge with <strong>module quizzes</strong>. Each quiz is linked to a course module and gives you instant feedback.',
+              side: 'right', align: 'center'
+            }
+          },
+          {
+            _mobileDrawer: true,
+            element: sidebarItem('settings'),
+            popover: {
+              title: '⚙️ Settings',
+              description: 'Update your <strong>profile, photo, and contact details</strong> here to personalise your learning experience.',
+              side: 'right', align: 'center'
+            }
+          },
+          {
+            _mobileDrawer: false,
+            element: mobile ? undefined : '#global-search-form',
+            popover: {
+              title: '🔍 Search Everything',
+              description: 'Use the <strong>search bar</strong> to instantly find courses, lessons, ebooks, and quizzes — just start typing.',
+              side: 'bottom', align: 'center'
+            }
+          },
+          {
+            _mobileDrawer: false,
+            element: '#themeToggle',
+            popover: {
+              title: '🌙 Dark / Light Mode',
+              description: 'Switch between <strong>dark and light themes</strong> anytime to suit your study environment.',
+              side: 'bottom', align: 'end'
+            }
+          },
+          {
+            _mobileDrawer: false,
+            element: '#chatbotToggle',
+            popover: {
+              title: '🤖 Meet Tabby — Your Study Buddy',
+              description: 'Tap the robot icon anytime to open <strong>Tabby</strong>, your AI-powered assistant. Ask questions, clarify concepts, or quiz yourself!',
+              side: 'top', align: 'end'
+            }
+          }
+        ];
+
+        /* Drop steps whose element selector doesn't exist at all in the DOM.
+           Steps with element=undefined are kept → Driver.js shows a centred popup. */
+        steps = steps.filter(function (s) {
+          return s.element === undefined || exists(s.element);
+        });
+
+        /* Reference to the last step — used to detect "Get Started" vs skip */
+        var lastStep = steps[steps.length - 1];
+        var _tourCompleted = false;
+
+        /* ── Celebration ───────────────────────────────────────────────────── */
+        function showCelebration() {
+          var sm = window.innerWidth < 480; /* small phone */
+          var colors = ['#00878d','#FFD700','#FF6B6B','#4ECDC4','#C084FC','#FB923C'];
+
+          /* canvas-confetti creates a position:fixed canvas so body overflow:hidden
+             does not clip it — safe on all mobile browsers */
+          if (typeof confetti === 'function') {
+            /* --- big balloon burst from bottom-centre --- */
+            confetti({
+              particleCount: sm ? 70 : 130,
+              spread: 90,
+              origin: { x: 0.5, y: 0.95 },
+              colors: colors,
+              shapes: ['circle'],
+              scalar: sm ? 1.6 : 2.2,
+              gravity: 0.45,
+              drift: 0,
+              ticks: 480
+            });
+            /* --- ribbon streamers from left & right edges --- */
+            var end = Date.now() + (sm ? 2200 : 3000);
+            (function frame() {
+              confetti({ particleCount: sm?3:5, angle:60,  spread:50, origin:{x:0}, colors:colors, shapes:['rect'], scalar:0.85, gravity:1.0 });
+              confetti({ particleCount: sm?3:5, angle:120, spread:50, origin:{x:1}, colors:colors, shapes:['rect'], scalar:0.85, gravity:1.0 });
+              if (Date.now() < end) requestAnimationFrame(frame);
+            })();
+          }
+
+          /* --- celebration modal --- */
+          var overlay = document.createElement('div');
+          overlay.setAttribute('role', 'dialog');
+          overlay.setAttribute('aria-modal', 'true');
+          overlay.setAttribute('aria-label', 'Congratulations');
+          /* overflow:visible on overlay so card spring-animation is not clipped */
+          overlay.style.cssText = [
+            'position:fixed', 'top:0', 'left:0', 'right:0', 'bottom:0',
+            'z-index:100001',
+            'display:flex', 'align-items:center', 'justify-content:center',
+            'padding:16px',                       /* prevent card touching edges */
+            'background:rgba(0,0,0,0.45)',
+            '-webkit-backdrop-filter:blur(8px)',  /* Safari */
+            'backdrop-filter:blur(8px)',
+            'animation:kza-fadeIn .3s ease',
+            'overflow:auto',                      /* allow scroll if card taller than viewport */
+            'box-sizing:border-box'
+          ].join(';');
+
+          var card = document.createElement('div');
+          card.style.cssText = [
+            'background:#fff',
+            'border-radius:' + (sm ? '20px' : '28px'),
+            'padding:' + (sm ? '28px 20px 24px' : '40px 44px 36px'),
+            'text-align:center',
+            'width:100%',
+            'max-width:' + (sm ? '340px' : '420px'),
+            'box-shadow:0 32px 80px rgba(0,0,0,0.28)',
+            'animation:kza-popIn .45s cubic-bezier(.34,1.56,.64,1)',
+            'position:relative',
+            'flex-shrink:0'         /* don't compress inside flex overlay */
+          ].join(';');
+
+          var emojiSz  = sm ? '3.6rem' : '4.8rem';
+          var headSz   = sm ? '1.25rem' : '1.65rem';
+          var bodySz   = sm ? '0.875rem' : '0.95rem';
+          var btnPad   = sm ? '12px 28px' : '15px 40px';
+          var btnSz    = sm ? '0.9rem' : '1rem';
+
+          card.innerHTML = [
+            '<div style="font-size:' + emojiSz + ';line-height:1;margin-bottom:12px;animation:kza-float 2s ease-in-out infinite">🎉</div>',
+            '<h2 style="font-size:' + headSz + ';font-weight:800;color:#0f172a;margin:0 0 10px;line-height:1.2">You\'re all set!</h2>',
+            '<p style="font-size:' + bodySz + ';color:#6b7280;line-height:1.7;margin:0 0 ' + (sm?'20px':'28px') + '">',
+              'Welcome to <strong style="color:#00878d">Kuza Ndoto Academy</strong>.<br>',
+              'Your learning journey starts <em>right now</em>&nbsp;🚀',
+            '</p>',
+            '<button id="kza-start-btn" style="',
+              'display:inline-block;',
+              'background:#00878d;color:#fff;',
+              'border:none;border-radius:' + (sm?'12px':'14px') + ';',
+              'padding:' + btnPad + ';',
+              'font-size:' + btnSz + ';font-weight:700;',
+              'cursor:pointer;letter-spacing:.02em;',
+              'box-shadow:0 8px 24px rgba(0,135,141,.35);',
+              'transition:background .18s,transform .12s;',
+              '-webkit-tap-highlight-color:transparent;',   /* remove grey flash on iOS */
+              'touch-action:manipulation;',                 /* faster tap, no double-tap zoom */
+              'user-select:none',
+            '">',
+              'Start Learning&nbsp;🚀',
+            '</button>'
+          ].join('');
+
+          overlay.appendChild(card);
+          document.body.appendChild(overlay);
+
+          var btn = document.getElementById('kza-start-btn');
+          function dismiss() {
+            overlay.style.animation = 'kza-fadeOut .28s ease forwards';
+            setTimeout(function () { if (overlay.parentNode) overlay.remove(); }, 300);
+          }
+          if (btn) {
+            /* desktop hover */
+            btn.addEventListener('mouseenter', function () { btn.style.background='#006f74'; btn.style.transform='scale(1.05)'; });
+            btn.addEventListener('mouseleave', function () { btn.style.background='#00878d'; btn.style.transform=''; });
+            /* mobile press feedback */
+            btn.addEventListener('touchstart',  function () { btn.style.background='#006f74'; btn.style.transform='scale(0.97)'; }, {passive:true});
+            btn.addEventListener('touchend',    function () { btn.style.background='#00878d'; btn.style.transform=''; }, {passive:true});
+            btn.addEventListener('click', dismiss);
+          }
+          /* tap backdrop to close */
+          overlay.addEventListener('click', function (e) { if (e.target === overlay) dismiss(); });
+          /* auto-dismiss after 10 s */
+          setTimeout(dismiss, 10000);
+        }
+
+
+
+        var driverObj = d({
+          animate: true,
+          showProgress: true,
+          showButtons: ['next', 'previous', 'close'],
+          nextBtnText: 'Next →',
+          prevBtnText: '← Back',
+          doneBtnText: '🎉 Get Started!',
+          overlayOpacity: 0.55,
+          allowClose: true,
+          stagePadding: 8,
+          stageRadius: 10,
+          progressText: '{{current}} of {{total}}',
+
+          /* Detect "Get Started" click on the last step */
+          onNextClick: function (el, step) {
+            if (step === lastStep) {
+              _tourCompleted = true;
+            }
+            driverObj.moveNext();
+          },
+
+          /* Open/close mobile drawer before Driver.js positions the highlight */
+          onHighlightStarted: function (el, step) {
+            if (!mobile) return;
+            var needsDrawer = step && step._mobileDrawer;
+            if (needsDrawer) { openDrawerInstant(); } else { closeDrawerInstant(); }
+          },
+
+          onDestroyStarted: function () {
+            if (mobile) closeDrawerInstant();
+            markDone();
+            var celebrate = _tourCompleted;
+            driverObj.destroy();
+            if (celebrate) {
+              setTimeout(showCelebration, 250);
+            }
+          },
+
+          steps: steps
+        });
+
+        setTimeout(function () { driverObj.drive(); }, 900);
+      });
+    })();
+    </script>
+    {% endverbatim %}
+    {% endif %}{% endif %}
+
+
+<!-- Notification Bell JavaScript -->
+<script>
+(function () {
+    const toggle = document.getElementById('notificationToggle');
+    const dropdown = document.getElementById('notificationDropdown');
+    const container = document.getElementById('notificationContainer');
+    const badge = document.getElementById('notif-badge');
+    const markAllBtn = document.getElementById('markAllReadBtn');
+    if (!toggle || !dropdown) return;
+
+    // Toggle dropdown open/close
+    toggle.addEventListener('click', function (e) {
+        e.stopPropagation();
+        dropdown.classList.toggle('hidden');
+    });
+
+    // Close on outside click
+    document.addEventListener('click', function (e) {
+        if (container && !container.contains(e.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
+
+    // Mark all as read
+    if (markAllBtn) {
+        markAllBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+            const csrf = csrfToken ? csrfToken.value : getCookie('csrftoken');
+            fetch('{% url "mark_all_notifications_read" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrf,
+                    'Content-Type': 'application/json'
+                }
+            }).then(function (r) {
+                if (r.ok) {
+                    // Remove unread styling
+                    document.querySelectorAll('.notif-item').forEach(function (el) {
+                        el.classList.remove('bg-primary/5', 'dark:bg-primary/10');
+                    });
+                    document.querySelectorAll('.notif-item .rounded-full.bg-primary').forEach(function (dot) {
+                        dot.remove();
+                    });
+                    // Hide badge
+                    if (badge) { badge.classList.add('hidden'); badge.textContent = ''; }
+                }
+            });
+        });
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+})();
+</script>
+
+</body>
+</html>

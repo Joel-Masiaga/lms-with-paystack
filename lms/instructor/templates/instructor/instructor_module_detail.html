@@ -1,0 +1,123 @@
+{% extends 'home/base.html' %}
+
+{% block title %}Module: {{ module.title }} — Kuza Ndoto Academy{% endblock %}
+
+{% block content %}
+<main class="flex-1 overflow-y-auto">
+<div class="p-4 sm:p-6 max-w-5xl mx-auto">
+
+    <nav class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-5">
+        <a href="{% url 'instructor_course_list' %}" class="hover:text-primary transition-colors"><i class="fas fa-chalkboard-teacher mr-1"></i>Courses</a>
+        <i class="fas fa-chevron-right text-[10px]"></i>
+        <a href="{% url 'instructor_course_detail' module.course.pk %}" class="hover:text-primary transition-colors">{{ module.course.title|truncatewords:4 }}</a>
+        <i class="fas fa-chevron-right text-[10px]"></i>
+        <span class="text-gray-700 dark:text-gray-300 font-medium">{{ module.title|truncatewords:3 }}</span>
+    </nav>
+
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-6">
+        <div class="p-5 sm:p-6 border-gray-100 dark:border-gray-700">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">{{ module.title }}</h1>
+            
+            <div class="prose dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 mb-4 text-sm">
+                {{ module.description|safe }}
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+                <a href="{% url 'update_module' pk=module.pk %}" class="bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm py-2 px-4 rounded-lg transition-colors"><i class="fas fa-edit mr-1"></i> Edit Module</a>
+                <a href="{% url 'create_lesson' pk=module.pk %}" class="bg-primary hover:bg-primary-dark text-white font-medium text-sm py-2 px-4 rounded-lg transition-colors"><i class="fas fa-plus mr-1"></i> Add Lesson</a>
+                <a href="{% url 'create_quiz' pk=module.pk %}" class="bg-purple-600 hover:bg-purple-700 text-white font-medium text-sm py-2 px-4 rounded-lg transition-colors"><i class="fas fa-list-check mr-1"></i> Add Quiz</a>
+                <a href="{% url 'delete_module' pk=module.pk %}" class="bg-red-500/10 text-red-600 hover:bg-red-600 hover:text-white font-medium text-sm py-2 px-4 rounded-lg transition-colors"><i class="fas fa-trash mr-1"></i> Delete</a>
+            </div>
+        </div>
+    </div>
+
+    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4"><i class="fas fa-book-reader mr-2 text-primary"></i>Lessons</h2>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+        {% if module.lessons.all %}
+        <div class="divide-y divide-gray-100 dark:divide-gray-700" id="lessons-list">
+            {% for lesson in module.lessons.all %}
+            <div class="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition duration-150 lesson-item" data-id="{{ lesson.pk }}">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-grip-vertical text-gray-300 dark:text-gray-600 cursor-move hover:text-gray-500 transition-colors lesson-handle"></i>
+                    <a href="{% url 'instructor_lesson_detail' lesson.pk %}" class="font-medium text-gray-800 dark:text-gray-200 hover:text-primary">{{ lesson.title }}</a>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a href="{% url 'update_lesson' lesson.pk %}" class="bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 p-2 rounded hover:bg-blue-200"><i class="fas fa-edit"></i></a>
+                    <a href="{% url 'delete_lesson' lesson.pk %}" class="bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 p-2 rounded hover:bg-red-200"><i class="fas fa-trash"></i></a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="p-8 text-center text-gray-500 dark:text-gray-400">
+            No lessons added to this module yet. <br>
+            <a href="{% url 'create_lesson' pk=module.pk %}" class="text-primary hover:underline mt-2 inline-block"><i class="fas fa-plus"></i> Add a Lesson</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 mt-8"><i class="fas fa-list-check mr-2 text-purple-600"></i>Quizzes</h2>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 mb-8">
+        {% if module.quizzes.all %}
+        <div class="divide-y divide-gray-100 dark:divide-gray-700">
+            {% for quiz in module.quizzes.all %}
+            <div class="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition duration-150">
+                <div class="flex flex-col">
+                    <a href="{% url 'instructor_quiz_detail' quiz.pk %}" class="font-medium text-gray-800 dark:text-gray-200 hover:text-purple-600">{{ quiz.title }}</a>
+                    <span class="text-xs text-gray-500">{{ quiz.questions.count }} question{{ quiz.questions.count|pluralize }}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a href="{% url 'update_quiz' quiz.pk %}" class="bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 p-2 rounded hover:bg-blue-200"><i class="fas fa-edit"></i></a>
+                    <a href="{% url 'delete_quiz' quiz.pk %}" class="bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 p-2 rounded hover:bg-red-200"><i class="fas fa-trash"></i></a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="p-8 text-center text-gray-500 dark:text-gray-400">
+            No quizzes added to this module yet. <br>
+            <a href="{% url 'create_quiz' pk=module.pk %}" class="text-purple-600 hover:underline mt-2 inline-block"><i class="fas fa-plus"></i> Add a Quiz</a>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const lessonList = document.getElementById('lessons-list');
+        if (lessonList) {
+            new Sortable(lessonList, {
+                handle: '.lesson-handle',
+                animation: 150,
+                onEnd: function (evt) {
+                    const items = lessonList.querySelectorAll('.lesson-item');
+                    const lessonIds = Array.from(items).map(item => item.getAttribute('data-id'));
+                    
+                    fetch("{% url 'reorder_lessons' %}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({ lesson_ids: lessonIds })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if(data.status !== 'success') {
+                            alert('Failed to reorder lessons.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

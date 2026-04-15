@@ -1,0 +1,66 @@
+{% extends 'home/base.html' %}
+
+{% block title %}Quiz: {{ quiz.title }} — Kuza Ndoto Academy{% endblock %}
+
+{% block content %}
+<main class="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 pb-12">
+<div class="p-4 sm:p-6 max-w-5xl mx-auto">
+
+    <nav class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-5">
+        <a href="{% url 'instructor_course_list' %}" class="hover:text-primary transition-colors"><i class="fas fa-chalkboard-teacher mr-1"></i>Courses</a>
+        <i class="fas fa-chevron-right text-[10px]"></i>
+        <a href="{% url 'instructor_course_detail' quiz.module.course.pk %}" class="hover:text-primary transition-colors">{{ quiz.module.course.title|truncatewords:4 }}</a>
+        <i class="fas fa-chevron-right text-[10px]"></i>
+        <a href="{% url 'instructor_module_detail' quiz.module.pk %}" class="hover:text-primary transition-colors">{{ quiz.module.title|truncatewords:3 }}</a>
+        <i class="fas fa-chevron-right text-[10px]"></i>
+        <span class="text-gray-700 dark:text-gray-300 font-medium">{{ quiz.title|truncatewords:3 }}</span>
+    </nav>
+
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-6">
+        <div class="p-5 sm:p-6 border-b border-gray-100 dark:border-gray-700">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">{{ quiz.title }}</h1>
+            <p class="text-sm text-gray-500 mb-4">{{ quiz.questions.count }} question{{ quiz.questions.count|pluralize }} in this quiz.</p>
+
+            <div class="flex flex-wrap gap-2">
+                <a href="{% url 'update_quiz' pk=quiz.pk %}" class="bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm py-2 px-4 rounded-lg transition-colors"><i class="fas fa-edit mr-1"></i> Edit Quiz Settings</a>
+                <a href="{% url 'create_question' pk=quiz.pk %}" class="bg-primary hover:bg-primary-dark text-white font-medium text-sm py-2 px-4 rounded-lg transition-colors"><i class="fas fa-plus mr-1"></i> Add Question</a>
+                <a href="{% url 'delete_quiz' pk=quiz.pk %}" class="bg-red-500/10 text-red-600 hover:bg-red-600 hover:text-white font-medium text-sm py-2 px-4 rounded-lg transition-colors"><i class="fas fa-trash mr-1"></i> Delete</a>
+            </div>
+        </div>
+    </div>
+
+    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 mt-8"><i class="fas fa-question-circle mr-2 text-primary"></i>Questions</h2>
+    <div class="space-y-4">
+        {% if quiz.questions.all %}
+            {% for question in quiz.questions.all %}
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
+                <div class="flex items-start justify-between gap-4">
+                    <div class="flex-1">
+                        <h3 class="font-bold text-gray-900 dark:text-gray-100 text-lg mb-3">{{ question.question_text }}</h3>
+                        <div class="grid sm:grid-cols-2 gap-2 text-sm text-gray-700 dark:text-gray-300">
+                            {% for answer in question.answers.all %}
+                                <div class="px-3 py-2 rounded-lg border {% if answer.is_correct %}bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800 text-green-800 dark:text-green-300 font-medium{% else %}bg-gray-50 dark:bg-gray-750 border-gray-200 dark:border-gray-700{% endif %}">
+                                    <span class="mr-2 opacity-50">{{ forloop.counter }}.</span> {{ answer.answer_text }}
+                                    {% if answer.is_correct %}<i class="fas fa-check-circle ml-1"></i>{% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-2 shrink-0">
+                        <a href="{% url 'update_question' question.pk %}" class="text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 p-2 rounded text-center transition-colors"><i class="fas fa-edit"></i></a>
+                        <a href="{% url 'delete_question' question.pk %}" class="text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:hover:bg-red-900/50 p-2 rounded text-center transition-colors"><i class="fas fa-trash"></i></a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 text-center text-gray-500 dark:text-gray-400">
+            No questions added to this quiz yet. <br>
+            <a href="{% url 'create_question' pk=quiz.pk %}" class="text-primary hover:underline mt-2 inline-block"><i class="fas fa-plus"></i> Add the first question</a>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+</main>
+{% endblock %}

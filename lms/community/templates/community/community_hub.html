@@ -1,0 +1,259 @@
+{% extends 'home/base.html' %}
+{% load static %}
+
+{% block title %}Community Hub - Connect, Learn & Grow{% endblock %}
+
+{% block content %}
+<main class="flex-1 p-3 pb-20 sm:p-6 overflow-y-auto">
+    <!-- Hero/Welcome Section -->
+    <section class="bg-primary dark:bg-primary-dark p-3 sm:p-6 rounded-lg shadow-lg mb-6 text-white relative overflow-hidden">
+        <div class="relative z-10">
+            <h1 class="text-lg sm:text-xl font-bold mb-1 sm:mb-2">
+                Learn Together, Grow Together
+            </h1>
+            <p class="text-xs sm:text-sm text-gray-100 mb-4">
+                Community is at the heart of learning. Connect with peers, share knowledge, and unlock your potential through meaningful relationships.
+            </p>
+
+            <div class="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 text-center">
+                <div>
+                    <span class="block text-base sm:text-lg font-bold">{{ user_groups_count }}</span>
+                    <span class="block text-xs opacity-80">Groups Joined</span>
+                </div>
+                <div>
+                    <span class="block text-base sm:text-lg font-bold">{{ pending_invitations_count }}</span>
+                    <span class="block text-xs opacity-80">Invitations</span>
+                </div>
+                <div>
+                    <span class="block text-base sm:text-lg font-bold">
+                        <i class="fas fa-handshake text-sm sm:text-base"></i>
+                    </span>
+                    <span class="block text-xs opacity-80">Networks</span>
+                </div>
+                <div>
+                    <span class="block text-base sm:text-lg font-bold">
+                        <i class="fas fa-lightbulb text-sm sm:text-base"></i>
+                    </span>
+                    <span class="block text-xs opacity-80">Knowledge</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="absolute -bottom-10 -right-10 w-32 h-32 bg-white opacity-10 rounded-full"></div>
+        <div class="absolute top-5 left-5 w-20 h-20 bg-white opacity-5 rounded-lg transform rotate-12"></div>
+    </section>
+
+    <!-- Community Options Section -->
+    <section class="mb-8">
+        <div class="flex items-center justify-between mb-3 sm:mb-4">
+            <h2 class="text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-100">Community Hub</h2>
+            <a href="{% url 'conversation_list' %}" class="text-primary dark:text-primary-light hover:text-primary-dark dark:hover:text-primary-light text-xs sm:text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 rounded p-1">
+                Messages <i class="fas fa-chevron-right ml-1 text-xs"></i>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+            
+            <!-- Card 1: Discover Users -->
+            <a href="{% url 'user_directory' %}" class="group h-full">
+                <div class="h-full bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                    <!-- Card Icon/Header -->
+                    <div class="bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30 p-3 sm:p-6 flex items-center justify-center">
+                        <div class="text-blue-600 dark:text-blue-400 text-3xl sm:text-5xl">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Card Content -->
+                    <div class="p-3 sm:p-4">
+                        <h3 class="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-100 mb-1 sm:mb-2">Discover Users</h3>
+                        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-3">
+                            Browse and connect with other members who share your interests
+                        </p>
+                        <span class="inline-flex items-center text-primary dark:text-primary-light font-semibold text-xs sm:text-sm group-hover:translate-x-1 transition-transform">
+                            Explore <i class="fas fa-arrow-right ml-1 sm:ml-2 text-xs"></i>
+                        </span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Card 2: Your Groups -->
+            <a href="{% url 'group_list' %}" class="group h-full">
+                <div class="h-full bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                    <!-- Card Icon/Header -->
+                    <div class="bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/30 dark:to-green-800/30 p-3 sm:p-6 flex items-center justify-center">
+                        <div class="text-green-600 dark:text-green-400 text-3xl sm:text-5xl">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Card Content -->
+                    <div class="p-3 sm:p-4">
+                        <h3 class="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-100 mb-1 sm:mb-2">Your Groups</h3>
+                        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-3">
+                            Manage and chat with your groups
+                        </p>
+                        <span class="inline-block bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded text-xs font-semibold mb-3">
+                            {{ user_groups_count }} joined
+                        </span>
+                        <br>
+                        <span class="inline-flex items-center text-primary dark:text-primary-light font-semibold text-xs sm:text-sm group-hover:translate-x-1 transition-transform">
+                            View <i class="fas fa-arrow-right ml-1 sm:ml-2 text-xs"></i>
+                        </span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Card 3: Discover Groups -->
+            <a href="{% url 'group_discovery' %}" class="group h-full">
+                <div class="h-full bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                    <!-- Card Icon/Header -->
+                    <div class="bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30 p-3 sm:p-6 flex items-center justify-center">
+                        <div class="text-purple-600 dark:text-purple-400 text-3xl sm:text-5xl">
+                            <i class="fas fa-search"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Card Content -->
+                    <div class="p-3 sm:p-4">
+                        <h3 class="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-100 mb-1 sm:mb-2">Discover Groups</h3>
+                        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-3">
+                            Find and join new groups that match your interests
+                        </p>
+                        <span class="inline-flex items-center text-primary dark:text-primary-light font-semibold text-xs sm:text-sm group-hover:translate-x-1 transition-transform">
+                            Search <i class="fas fa-arrow-right ml-1 sm:ml-2 text-xs"></i>
+                        </span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Card 4: Invitations -->
+            <a href="{% url 'group_invitations' %}" class="group h-full">
+                <div class="h-full bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                    <!-- Card Icon/Header -->
+                    <div class="bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30 p-3 sm:p-6 flex items-center justify-center">
+                        <div class="text-orange-600 dark:text-orange-400 text-3xl sm:text-5xl">
+                            {% if pending_invitations_count > 0 %}
+                                <div class="relative">
+                                    <i class="fas fa-inbox"></i>
+                                    <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">{{ pending_invitations_count }}</span>
+                                </div>
+                            {% else %}
+                                <i class="fas fa-inbox"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Card Content -->
+                    <div class="p-3 sm:p-4">
+                        <h3 class="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-100 mb-1 sm:mb-2">Invitations</h3>
+                        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-3">
+                            Review pending group invitations
+                        </p>
+                        <span class="inline-block {% if pending_invitations_count > 0 %}bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300{% else %}bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300{% endif %} px-2 py-1 rounded text-xs font-semibold mb-3">
+                            {% if pending_invitations_count > 0 %}
+                                {{ pending_invitations_count }} pending
+                            {% else %}
+                                All caught up!
+                            {% endif %}
+                        </span>
+                        <br>
+                        <span class="inline-flex items-center text-primary dark:text-primary-light font-semibold text-xs sm:text-sm group-hover:translate-x-1 transition-transform">
+                            Check <i class="fas fa-arrow-right ml-1 sm:ml-2 text-xs"></i>
+                        </span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Card 5: Announcements -->
+            <a href="{% url 'student_announcements' %}" class="group h-full">
+                <div class="h-full bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                    <!-- Card Icon/Header -->
+                    <div class="bg-gradient-to-br from-teal-100 to-teal-200 dark:from-teal-900/30 dark:to-teal-800/30 p-3 sm:p-6 flex items-center justify-center">
+                        <div class="text-teal-600 dark:text-teal-400 text-3xl sm:text-5xl">
+                            <i class="fas fa-bullhorn"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Card Content -->
+                    <div class="p-3 sm:p-4">
+                        <h3 class="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-100 mb-1 sm:mb-2">Announcements</h3>
+                        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-3">
+                            View important broadcasts and updates from your course instructors
+                        </p>
+                        <span class="inline-flex items-center text-primary dark:text-primary-light font-semibold text-xs sm:text-sm group-hover:translate-x-1 transition-transform">
+                            Read <i class="fas fa-arrow-right ml-1 sm:ml-2 text-xs"></i>
+                        </span>
+                    </div>
+                </div>
+            </a>
+
+        </div>
+    </section>
+    <!-- Why Community Matters Section -->
+    <section class="mb-8">
+        <div class="flex items-center justify-between mb-3 sm:mb-4">
+            <h3 class="text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-100">Why Community Matters</h3>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+            <!-- Benefit 1 -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 sm:p-4 lg:p-6 hover:shadow-lg transition-shadow">
+                <div class="inline-flex items-center justify-center w-10 sm:w-12 h-10 sm:h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg mb-2 sm:mb-4">
+                    <i class="fas fa-brain text-blue-600 dark:text-blue-400 text-xl sm:text-2xl"></i>
+                </div>
+                <h4 class="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-100 mb-1 sm:mb-2">Learn Faster</h4>
+                <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                    Peer learning accelerates growth and deepens understanding through shared experiences
+                </p>
+            </div>
+
+            <!-- Benefit 2 -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 sm:p-4 lg:p-6 hover:shadow-lg transition-shadow">
+                <div class="inline-flex items-center justify-center w-10 sm:w-12 h-10 sm:h-12 bg-green-100 dark:bg-green-900/30 rounded-lg mb-2 sm:mb-4">
+                    <i class="fas fa-handshake text-green-600 dark:text-green-400 text-xl sm:text-2xl"></i>
+                </div>
+                <h4 class="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-100 mb-1 sm:mb-2">Build Networks</h4>
+                <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                    Create meaningful connections that last beyond the classroom and into your career
+                </p>
+            </div>
+
+            <!-- Benefit 3 -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 sm:p-4 lg:p-6 hover:shadow-lg transition-shadow">
+                <div class="inline-flex items-center justify-center w-10 sm:w-12 h-10 sm:h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg mb-2 sm:mb-4">
+                    <i class="fas fa-rocket text-purple-600 dark:text-purple-400 text-xl sm:text-2xl"></i>
+                </div>
+                <h4 class="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-100 mb-1 sm:mb-2">Grow Together</h4>
+                <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                    Support each other and achieve goals as a united community toward success
+                </p>
+            </div>
+        </div>
+    </section>
+    <!-- Call to Action Section -->
+    <section class="bg-primary dark:bg-primary-dark p-3 sm:p-6 rounded-lg shadow-lg text-white">
+        <div class="text-center max-w-2xl mx-auto">
+            <h2 class="text-base sm:text-lg font-semibold mb-1 sm:mb-2">Ready to expand your network?</h2>
+            <p class="text-xs sm:text-sm text-gray-100 mb-3 sm:mb-4">Start connecting with peers who share your passion for learning today.</p>
+            <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center">
+                <a href="{% url 'user_directory' %}" class="inline-flex items-center justify-center px-3 sm:px-6 py-2 sm:py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition font-semibold text-xs sm:text-sm">
+                    <i class="fas fa-user-plus mr-1 sm:mr-2 text-xs sm:text-base"></i><span class="hidden sm:inline">Find People</span><span class="sm:hidden">People</span>
+                </a>
+                <a href="{% url 'group_discovery' %}" class="inline-flex items-center justify-center px-3 sm:px-6 py-2 sm:py-3 bg-white hover:bg-gray-100 text-primary dark:text-primary rounded-lg transition font-semibold text-xs sm:text-sm">
+                    <i class="fas fa-search mr-1 sm:mr-2 text-xs sm:text-base"></i><span class="hidden sm:inline">Explore Groups</span><span class="sm:hidden">Groups</span>
+                </a>
+            </div>
+        </div>
+    </section>
+</main>
+
+<style>
+    /* Smooth transitions */
+    @media (prefers-reduced-motion: no-preference) {
+        a.group > div {
+            transition: all 0.3s ease;
+        }
+    }
+</style>
+{% endblock %}

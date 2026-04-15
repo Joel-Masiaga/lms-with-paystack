@@ -1,0 +1,55 @@
+{% load user_display_filters %}
+
+<div class="flex {% if is_own_message %}justify-end{% else %}justify-start{% endif %} animate-fadeIn mb-3" id="message-{{ message.id }}">
+    <div class="flex gap-2 sm:gap-3 max-w-xs sm:max-w-md lg:max-w-lg {% if is_own_message %}flex-row-reverse{% endif %}">
+        <!-- Avatar -->
+        {% if not is_own_message %}
+        <div class="flex-shrink-0">
+            {% if message.sender.profile.image and message.sender.profile.image.url != '/media/default.jpg' %}
+            <img src="{{ message.sender.profile.image.url }}" alt="{{ message.sender|get_display_name }}" class="w-8 h-8 rounded-full object-cover">
+            {% else %}
+            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white font-bold text-xs" title="{{ message.sender|get_avatar_label }}">
+                {{ message.sender|get_avatar_initials }}
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Message Bubble -->
+        <div class="flex flex-col {% if is_own_message %}items-end{% else %}items-start{% endif %}">
+            {% if not is_own_message %}
+            <p class="text-xs font-bold text-gray-800 dark:text-gray-200 mb-1">{{ message.sender|get_display_name }}</p>
+            {% endif %}
+            <div class="px-3 sm:px-4 py-2 rounded-2xl {% if is_own_message %}bg-primary text-white rounded-br-none{% else %}bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-none border border-gray-200 dark:border-gray-700{% endif %} shadow-sm break-words text-sm">
+                {% if message.attachment %}
+                <div class="mb-2">
+                    {% with filename=message.attachment.url|lower %}
+                        {% if ".jpg" in filename or ".jpeg" in filename or ".png" in filename or ".gif" in filename or ".webp" in filename %}
+                        <img src="{{ message.attachment.url }}" alt="Attachment" class="max-w-xs rounded-lg cursor-pointer hover:opacity-80 transition" onclick="openImageModal('{{ message.attachment.url }}')">
+                        {% elif ".mp4" in filename or ".webm" in filename or ".mov" in filename or ".avi" in filename or ".mkv" in filename %}
+                        <video class="max-w-xs rounded-lg" controls>
+                            <source src="{{ message.attachment.url }}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                        {% elif ".mp3" in filename or ".wav" in filename or ".ogg" in filename or ".m4a" in filename or ".flac" in filename %}
+                        <audio class="max-w-xs" controls>
+                            <source src="{{ message.attachment.url }}" type="audio/mpeg">
+                            Your browser does not support the audio element.
+                        </audio>
+                        {% else %}
+                        <a href="{{ message.attachment.url }}" download class="inline-flex items-center gap-2 bg-opacity-20 {% if is_own_message %}bg-white{% else %}bg-gray-200{% endif %} px-3 py-2 rounded-lg hover:opacity-80 transition">
+                            <i class="fas fa-file"></i>
+                            <span class="text-xs sm:text-sm">{{ message.attachment.name|slice:"24:" }}</span>
+                        </a>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+                {% endif %}
+                <p class="leading-relaxed">{{ message.content }}</p>
+            </div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 px-2">
+                {{ message.created_at|date:"H:i" }}
+            </p>
+        </div>
+    </div>
+</div>

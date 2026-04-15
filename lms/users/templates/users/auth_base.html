@@ -1,0 +1,123 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Kuza Ndoto Academy{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{% static 'home/logo2.png' %}">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#00878d',
+                        'primary-light': '#e0f2f1',
+                        'primary-dark': '#006f74',
+                        'primary-darker': '#005f63',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        /* Auto hide toasts animation */
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; display: none; }
+        }
+        .toast-animate-out {
+            animation: fadeOut 0.5s ease-out forwards;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col justify-center px-4 py-12 sm:px-6 lg:px-8 relative text-gray-800 overflow-x-hidden">
+
+    <!-- Toast Notification Layout -->
+    <div id="toast-stack" class="fixed top-4 right-4 z-[100] space-y-3 max-w-sm w-[calc(100vw-2rem)] sm:w-96" aria-live="polite" aria-atomic="true">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="toast pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-lg shadow-lg border
+                    {% if 'success' in message.tags %} bg-green-600 text-white border-green-500
+                    {% elif 'error' in message.tags %} bg-red-600 text-white border-red-500
+                    {% elif 'warning' in message.tags %} bg-yellow-500 text-white border-yellow-400
+                    {% else %} bg-primary text-white border-primary
+                    {% endif %} opacity-95 transition-opacity duration-300">
+                    <div class="shrink-0 flex items-center h-full mt-0.5">
+                        {% if 'success' in message.tags %}
+                            <i class="fas fa-check-circle"></i>
+                        {% elif 'error' in message.tags %}
+                            <i class="fas fa-times-circle"></i>
+                        {% elif 'warning' in message.tags %}
+                            <i class="fas fa-exclamation-triangle"></i>
+                        {% else %}
+                            <i class="fas fa-info-circle"></i>
+                        {% endif %}
+                    </div>
+                    <div class="text-sm font-medium flex-1">{{ message }}</div>
+                    <button class="ml-2 text-white/80 hover:text-white close-toast" aria-label="Close" onclick="this.closest('.toast').classList.add('toast-animate-out'); setTimeout(() => this.closest('.toast').remove(), 500);">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            {% endfor %}
+            <script>
+                // Auto dismiss toasts after 5 seconds
+                setTimeout(() => {
+                    document.querySelectorAll('.toast').forEach(toast => {
+                        toast.classList.add('toast-animate-out');
+                        setTimeout(() => toast.remove(), 500);
+                    });
+                }, 5000);
+            </script>
+        {% endif %}
+    </div>
+    
+    <!-- Decorative background elements -->
+    <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+        <div class="absolute -top-40 -left-40 w-96 h-96 bg-primary/20 rounded-full blur-[100px] animate-[float_6s_ease-in-out_infinite]"></div>
+        <div class="absolute top-1/2 -right-40 w-96 h-96 bg-primary/10 rounded-full blur-[100px] animate-[float_8s_ease-in-out_infinite]"></div>
+        <div class="absolute -bottom-40 left-1/4 w-96 h-96 bg-green-200/50 rounded-full blur-[100px] animate-[float_7s_ease-in-out_infinite]"></div>
+    </div>
+
+    <!-- Main Auth Card -->
+    <main class="glass relative z-10 w-full max-w-md mx-auto shadow-[0_8px_30px_rgb(0,0,0,0.08)] rounded-2xl border border-white/50 my-auto">
+        <div class="p-6 sm:p-8">
+            <div class="text-center mb-6">
+                <a href="{% url 'home' %}" class="inline-block focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl">
+                    <img src="{% static 'home/logo2.png' %}" class="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-3 object-contain rounded-xl shadow-sm border border-gray-100" alt="Kuza Ndoto Logo" onerror="this.src='https://placehold.co/100x100/00878d/FFF?text=KN'">
+                </a>
+                <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">Kuza Ndoto Academy</h1>
+                <p class="text-gray-500 mt-2 text-xs sm:text-sm uppercase tracking-widest font-semibold">{% block auth_subtitle %}Your Gateway Into the Future{% endblock %}</p>
+            </div>
+
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

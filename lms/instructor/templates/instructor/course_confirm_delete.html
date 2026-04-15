@@ -1,0 +1,47 @@
+{% extends 'home/base.html' %}
+
+{% block title %}Delete {{ object.title }} — Kuza Ndoto Academy{% endblock %}
+
+{% block content %}
+<main class="flex-1 overflow-y-auto">
+<div class="p-4 sm:p-6 max-w-2xl mx-auto">
+
+    <nav class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-5">
+        <a href="{% url 'instructor_course_list' %}" class="hover:text-primary transition-colors"><i class="fas fa-chalkboard-teacher mr-1"></i>Manage Courses</a>
+        <i class="fas fa-chevron-right text-[10px]"></i>
+        <span class="text-gray-700 dark:text-gray-300 font-medium">Delete</span>
+    </nav>
+
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-red-200 dark:border-red-900/30 overflow-hidden">
+        <div class="px-5 sm:px-6 py-5 bg-red-50 dark:bg-red-900/10 border-b border-red-200 dark:border-red-900/30">
+            <h1 class="text-xl font-bold text-red-600 dark:text-red-400 flex items-center gap-2">
+                <i class="fas fa-exclamation-triangle"></i> Delete Course
+            </h1>
+        </div>
+        <div class="p-5 sm:p-6">
+            <p class="text-gray-700 dark:text-gray-300 mb-2">
+                Are you sure you want to permanently delete the course:
+            </p>
+            <p class="text-lg font-bold text-gray-900 dark:text-white mb-4">"{{ object.title }}"</p>
+            <div class="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800/30 rounded-lg p-3 mb-6">
+                <p class="text-sm text-red-700 dark:text-red-400">
+                    <i class="fas fa-exclamation-circle mr-1"></i>
+                    This will permanently delete all modules, lessons, and enrollments associated with this course. This action <strong>cannot</strong> be undone.
+                </p>
+            </div>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="flex items-center gap-3">
+                    <button type="submit" class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors">
+                        <i class="fas fa-trash"></i> Yes, Delete
+                    </button>
+                    <a href="{% url 'instructor_course_detail' object.pk %}" class="inline-flex items-center gap-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2.5 px-6 rounded-lg transition-colors">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</main>
+{% endblock %}

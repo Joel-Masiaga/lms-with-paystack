@@ -1,0 +1,225 @@
+{% extends 'home/base.html' %}
+{% load static %}
+
+{% block title %}User Rights Management{% endblock %}
+
+{% block content %}
+<div class="flex-1 overflow-y-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">User Rights Management</h1>
+            <p class="mt-2 text-gray-600 dark:text-gray-400">Control admin, instructor, and superuser permissions.</p>
+        </div>
+
+        <!-- User Categories -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Superusers -->
+            <div class="bg-red-50 dark:bg-red-900 rounded-lg shadow p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-red-900 dark:text-red-100">Superusers</h2>
+                    <i class="fas fa-crown text-2xl text-red-500"></i>
+                </div>
+                <p class="text-2xl font-bold text-red-700 dark:text-red-400">{{ total_superusers }}</p>
+                <p class="text-sm text-red-600 dark:text-red-300 mt-2">Full system access</p>
+            </div>
+
+            <!-- Admins -->
+            <div class="bg-yellow-50 dark:bg-yellow-900 rounded-lg shadow p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-yellow-900 dark:text-yellow-100">Admins</h2>
+                    <i class="fas fa-shield-alt text-2xl text-yellow-500"></i>
+                </div>
+                <p class="text-2xl font-bold text-yellow-700 dark:text-yellow-400">{{ total_admins }}</p>
+                <p class="text-sm text-yellow-600 dark:text-yellow-300 mt-2">Staff access</p>
+            </div>
+
+            <!-- Instructors -->
+            <div class="bg-green-50 dark:bg-green-900 rounded-lg shadow p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-green-900 dark:text-green-100">Instructors</h2>
+                    <i class="fas fa-chalkboard-teacher text-2xl text-green-500"></i>
+                </div>
+                <p class="text-2xl font-bold text-green-700 dark:text-green-400">{{ total_instructors }}</p>
+                <p class="text-sm text-green-600 dark:text-green-300 mt-2">Teaching privileges</p>
+            </div>
+
+            <!-- Students -->
+            <div class="bg-blue-50 dark:bg-blue-900 rounded-lg shadow p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-blue-900 dark:text-blue-100">Students</h2>
+                    <i class="fas fa-graduation-cap text-2xl text-blue-500"></i>
+                </div>
+                <p class="text-2xl font-bold text-blue-700 dark:text-blue-400">{{ total_students }}</p>
+                <p class="text-sm text-blue-600 dark:text-blue-300 mt-2">Learning access</p>
+            </div>
+        </div>
+
+        <!-- Superusers List -->
+        {% if superusers %}
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+                <i class="fas fa-crown text-red-500 mr-3"></i>Superusers
+            </h2>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">User</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Email</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-600">
+                        {% for user in superusers %}
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    {% if user.profile.image %}
+                                    <img src="{{ user.profile.image.url }}" alt="" class="w-8 h-8 rounded-full mr-3">
+                                    {% else %}
+                                    <div class="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 mr-3 flex items-center justify-center">
+                                        <i class="fas fa-user text-gray-500 text-xs"></i>
+                                    </div>
+                                    {% endif %}
+                                    <span class="font-medium text-gray-900 dark:text-white">{{ user.get_full_name|default:user.email }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{{ user.email }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-3 py-1 text-xs font-medium rounded-full bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">Active</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <a href="{% url 'user_detail_admin' user.id %}" class="text-primary hover:text-primary-dark">View</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Admins List -->
+        {% if admins %}
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+                <i class="fas fa-shield-alt text-yellow-500 mr-3"></i>Admins
+            </h2>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">User</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Email</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-600">
+                        {% for user in admins %}
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    {% if user.profile.image %}
+                                    <img src="{{ user.profile.image.url }}" alt="" class="w-8 h-8 rounded-full mr-3">
+                                    {% else %}
+                                    <div class="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 mr-3 flex items-center justify-center">
+                                        <i class="fas fa-user text-gray-500 text-xs"></i>
+                                    </div>
+                                    {% endif %}
+                                    <span class="font-medium text-gray-900 dark:text-white">{{ user.get_full_name|default:user.email }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{{ user.email }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-3 py-1 text-xs font-medium rounded-full bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200">Admin</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                                <a href="{% url 'user_detail_admin' user.id %}" class="text-primary hover:text-primary-dark">View</a>
+                                <a href="{% url 'update_user_rights' user.id %}" class="text-blue-500 hover:text-blue-700">Edit</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Instructors List -->
+        {% if instructors %}
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+                <i class="fas fa-chalkboard-teacher text-green-500 mr-3"></i>Instructors
+            </h2>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">User</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Email</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Role</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-600">
+                        {% for user in instructors|slice:":10" %}
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    {% if user.profile.image %}
+                                    <img src="{{ user.profile.image.url }}" alt="" class="w-8 h-8 rounded-full mr-3">
+                                    {% else %}
+                                    <div class="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 mr-3 flex items-center justify-center">
+                                        <i class="fas fa-user text-gray-500 text-xs"></i>
+                                    </div>
+                                    {% endif %}
+                                    <span class="font-medium text-gray-900 dark:text-white">{{ user.get_full_name|default:user.email }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{{ user.email }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-3 py-1 text-xs font-medium rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">Instructor</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                                <a href="{% url 'user_detail_admin' user.id %}" class="text-primary hover:text-primary-dark">View</a>
+                                <a href="{% url 'update_user_rights' user.id %}" class="text-blue-500 hover:text-blue-700">Edit</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if instructors.count > 10 %}
+            <p class="mt-4 text-sm text-gray-600 dark:text-gray-400">Showing 10 of {{ instructors.count }} instructors. <a href="{% url 'user_management' %}?role=instructor" class="text-primary hover:text-primary-dark">View all</a></p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Legend -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Role & Permission Guide</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="border-l-4 border-red-500 pl-4">
+                    <p class="font-semibold text-gray-900 dark:text-white">Superuser</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Complete system access, can manage all features and users</p>
+                </div>
+                <div class="border-l-4 border-yellow-500 pl-4">
+                    <p class="font-semibold text-gray-900 dark:text-white">Admin</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Staff access, can use Django admin and manage content</p>
+                </div>
+                <div class="border-l-4 border-green-500 pl-4">
+                    <p class="font-semibold text-gray-900 dark:text-white">Instructor</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Can create and manage courses, modules, lessons, and quizzes</p>
+                </div>
+                <div class="border-l-4 border-blue-500 pl-4">
+                    <p class="font-semibold text-gray-900 dark:text-white">Student</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Can enroll in courses and complete learning materials</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

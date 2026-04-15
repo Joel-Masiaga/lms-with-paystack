@@ -1,0 +1,81 @@
+{% extends 'home/base.html' %}
+{% load static %}
+
+{% block title %}{{ course.title }} - Broadcasts{% endblock %}
+
+{% block content %}
+<div class="flex-1 overflow-y-auto">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-8 pb-6 border-b border-gray-200 dark:border-gray-700">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                <i class="fas fa-bullhorn text-primary mr-2"></i>{{ course.title }}
+            </h1>
+            <p class="text-gray-600 dark:text-gray-400">Course Announcements & Broadcasts</p>
+        </div>
+
+        <!-- Instructor Broadcast Button -->
+        {% if is_instructor %}
+        <div class="mb-8">
+            <a href="{% url 'course_broadcast' %}" class="inline-flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition">
+                <i class="fas fa-plus mr-2"></i>New Broadcast
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Broadcasts List -->
+        {% if broadcasts %}
+        <div class="space-y-6">
+            {% for broadcast in broadcasts %}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition p-6">
+                <!-- Header -->
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-900 dark:text-white">{{ broadcast.subject }}</h2>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                            <i class="fas fa-user mr-1"></i>{{ broadcast.instructor.get_full_name|default:broadcast.instructor.username }}
+                            <i class="fas fa-clock ml-4 mr-1"></i>{{ broadcast.created_at|date:"M d, Y H:i" }}
+                        </p>
+                    </div>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary bg-opacity-10 text-primary">
+                        <i class="fas fa-bullhorn mr-1"></i>Broadcast
+                    </span>
+                </div>
+
+                <!-- Content -->
+                <div class="prose dark:prose-invert max-w-none mb-4">
+                    {% autoescape off %}
+                    <p class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{{ broadcast.content }}</p>
+                    {% endautoescape %}
+                </div>
+
+                <!-- Footer Info -->
+                <div class="pt-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                    <span class="text-xs text-gray-500 dark:text-gray-400">
+                        <i class="fas fa-file-alt mr-1"></i>Broadcast ID: #{{ broadcast.id }}
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
+            <i class="fas fa-bullhorn text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No announcements yet</h2>
+            <p class="text-gray-600 dark:text-gray-400">
+                {% if is_instructor %}
+                Send your first broadcast to participants now!
+                {% else %}
+                Check back later for course announcements and updates.
+                {% endif %}
+            </p>
+            {% if is_instructor %}
+            <a href="{% url 'course_broadcast' %}" class="inline-flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition mt-6">
+                <i class="fas fa-plus mr-2"></i>Send First Broadcast
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

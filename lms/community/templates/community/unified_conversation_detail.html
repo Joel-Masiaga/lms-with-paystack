@@ -1,0 +1,944 @@
+{% extends 'home/base.html' %}
+{% load static %}
+{% load user_display_filters %}
+
+{% block title %}
+    {% if conversation_type == 'direct' and other_user %}
+        Chat with {{ other_user|get_display_name|default:"User" }}
+    {% elif conversation_type == 'group' and group %}
+        {{ group.name|default:"Group" }}
+    {% else %}
+        Chat
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="flex-1 overflow-hidden flex bg-white dark:bg-gray-900">
+    <!-- Left Sidebar - Unified Conversations List -->
+    <div class="hidden md:flex md:flex-col md:w-80 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+        <!-- Sidebar Header -->
+        <div class="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-3">Messages</h2>
+            <input type="text" id="chat-search-input" placeholder="Search..." class="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 border-0 rounded-full placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+        </div>
+
+        <!-- Unified Conversations List -->
+        <div class="flex-1 overflow-y-auto">
+            {% if all_conversations %}
+                {% for conv in all_conversations %}
+                <!-- Conversation Item -->
+                <a href="{% if conv.type == 'direct' %}{% url 'unified_conversation' %}?type=direct&user_id={{ conv.id }}{% else %}{% url 'unified_conversation' %}?type=group&group_id={{ conv.id }}{% endif %}" 
+                   class="sidebar-chat-item flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition {% if conv.formatted_id == active_conversation_id %}bg-primary/10 dark:bg-primary/20 border-l-4 border-primary{% endif %}"
+                   data-name="{{ conv.name|lower|default:'' }}"
+                   data-msg="{% if conv.last_message %}{{ conv.last_message.content|lower|escape }}{% endif %}">
+                    
+                    <!-- Avatar -->
+                    <div class="relative flex-shrink-0">
+                        {% if conv.type == 'direct' %}
+                            {% if conv.user.profile.image and conv.user.profile.image.url != '/media/default.jpg' %}
+                            <img src="{{ conv.user.profile.image.url }}" alt="{{ conv.name }}" class="w-10 sm:w-12 h-10 sm:h-12 rounded-full object-cover">
+                            {% else %}
+                            <div class="w-10 sm:w-12 h-10 sm:h-12 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white font-bold text-xs sm:text-sm" title="{{ conv.user|get_avatar_label }}">
+                                {{ conv.user|get_avatar_initials }}
+                            </div>
+                            {% endif %}
+                            {% if conv.is_online %}
+                            <span class="absolute bottom-0 right-0 w-2.5 sm:w-3 h-2.5 sm:h-3 bg-green-500 rounded-full border border-white dark:border-gray-800"></span>
+                            {% endif %}
+                        {% else %}
+                            <!-- Group Avatar -->
+                            <div class="w-10 sm:w-12 h-10 sm:h-12 rounded-lg bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30 flex items-center justify-center text-purple-600 dark:text-purple-400 font-bold text-sm sm:text-base flex-shrink-0">
+                                <i class="fas fa-users"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Conversation Info -->
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between gap-2">
+                            <h3 class="font-semibold text-gray-900 dark:text-white truncate text-sm sm:text-base">
+                                {% if conv.type == 'direct' %}
+                                    {{ conv.name|default:"User" }}
+                                {% else %}
+                                    <i class="fas fa-hashtag text-purple-600 dark:text-purple-400 text-xs mr-1"></i>{{ conv.name|default:"Group" }}
+                                {% endif %}
+                            </h3>
+                            <span class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
+                                {% if conv.last_message %}
+                                    {{ conv.last_message.created_at|date:"H:i" }}
+                                {% endif %}
+                            </span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
+                            {% if conv.last_message %}
+                                {% if conv.type == 'direct' %}
+                                    {% if conv.last_message.sender == request.user %}You: {% endif %}{{ conv.last_message.content|truncatewords:8 }}
+                                {% else %}
+                                    <span class="font-medium">{{ conv.last_message.sender.first_name }}:</span> {{ conv.last_message.content|truncatewords:8 }}
+                                {% endif %}
+                            {% else %}
+                                No messages yet
+                            {% endif %}
+                        </p>
+                        {% if conv.type == 'group' %}
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                            {{ conv.member_count }} members
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Unread Badge -->
+                    {% if conv.unread_count > 0 %}
+                    <div class="flex-shrink-0 bg-primary text-white text-xs font-bold rounded-full min-w-5 h-5 flex items-center justify-center">
+                        {{ conv.unread_count }}
+                    </div>
+                    {% endif %}
+                </a>
+                {% endfor %}
+            {% else %}
+            <div class="flex items-center justify-center h-full text-center p-4">
+                <div>
+                    <i class="fas fa-comments text-4xl text-gray-300 dark:text-gray-600 mb-3 block"></i>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">No conversations yet</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Right Side - Chat Area -->
+    <div class="flex-1 overflow-hidden flex flex-col">
+        {% if error %}
+            <!-- Error Message -->
+            <div class="bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800 px-4 sm:px-6 py-3">
+                <p class="text-red-800 dark:text-red-300 text-sm">
+                    <i class="fas fa-exclamation-circle mr-2"></i>{{ error }}
+                </p>
+            </div>
+        {% else %}
+            <!-- Chat Header -->
+            <div class="bg-gradient-to-r from-primary to-primary-dark text-white px-3 sm:px-6 py-3 sm:py-4 shadow-md flex items-center justify-between sticky top-0 z-10">
+                <div class="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                    <a href="{% url 'conversation_list' %}" class="text-white hover:bg-white/20 p-1 sm:p-2 rounded-lg transition md:hidden text-xs sm:text-base">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                    
+                    <!-- Conversation Header Info -->
+                    {% if conversation_type == 'direct' and other_user %}
+                        <div class="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                            {% if other_user.profile.image and other_user.profile.image.url != '/media/default.jpg' %}
+                            <img src="{{ other_user.profile.image.url }}" alt="{{ other_user|get_display_name }}" class="w-10 sm:w-12 h-10 sm:h-12 rounded-full object-cover border-2 border-white flex-shrink-0">
+                            {% else %}
+                            <div class="w-10 sm:w-12 h-10 sm:h-12 rounded-full bg-white/20 flex items-center justify-center font-bold border-2 border-white flex-shrink-0 text-sm sm:text-lg" title="{{ other_user|get_avatar_label }}">
+                                {{ other_user|get_avatar_initials }}
+                            </div>
+                            {% endif %}
+                            
+                            <div class="min-w-0 flex-1">
+                                <h2 class="font-semibold truncate text-sm sm:text-lg">{{ other_user|get_display_name|default:"User" }}</h2>
+                                {% if other_user.profile.country %}
+                                <p class="text-xs text-white/80">📍 {{ other_user.profile.country }}</p>
+                                {% endif %}
+                                {% if is_online %}
+                                <p class="text-xs text-green-100">● Active now</p>
+                                {% else %}
+                                <p class="text-xs text-white/70">Last seen {{ last_seen|date:"M d, H:i" }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    
+                    {% elif conversation_type == 'group' and group %}
+                        <div class="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                            <div class="w-10 sm:w-12 h-10 sm:h-12 rounded-lg bg-white/20 flex items-center justify-center text-white font-bold border-2 border-white flex-shrink-0 text-sm sm:text-lg">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            
+                            <div class="min-w-0 flex-1">
+                                <h2 class="font-semibold truncate text-sm sm:text-lg">
+                                    <i class="fas fa-hashtag text-xs mr-1"></i>{{ group.name }}
+                                </h2>
+                                <p class="text-xs text-white/70">{{ member_count }} members</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Header Actions -->
+                <div class="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                    {% if conversation_type == 'group' and group %}
+                        {% if is_group_admin %}
+                            <a href="{% url 'group_members' group.id %}" class="p-1 sm:p-2 hover:bg-white/20 rounded-lg transition text-xs sm:text-base" title="Manage Members">
+                                <i class="fas fa-users-cog"></i>
+                            </a>
+                            <a href="{% url 'edit_group' group.id %}" class="p-1 sm:p-2 hover:bg-white/20 rounded-lg transition text-xs sm:text-base" title="Edit Group">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        {% endif %}
+                        <button id="groupInfoBtn" class="p-1 sm:p-2 hover:bg-white/20 rounded-lg transition text-xs sm:text-base" title="Group Info">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Group Info Slide-Over Panel -->
+            {% if conversation_type == 'group' and group %}
+            <div id="groupInfoOverlay" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity" onclick="closeGroupInfo()"></div>
+            <aside id="groupInfoPanel"
+                   class="hidden fixed top-0 right-0 h-full w-full sm:w-80 bg-white dark:bg-gray-800 shadow-2xl z-50 flex flex-col transform transition-transform overflow-hidden">
+
+                <!-- Panel Header -->
+                <div class="bg-gradient-to-r from-primary to-primary-dark text-white px-5 py-4 flex items-center justify-between flex-shrink-0">
+                    <h2 class="font-bold text-base">Group Info</h2>
+                    <button onclick="closeGroupInfo()" class="p-1.5 hover:bg-white/20 rounded-lg transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <!-- Scrollable Body -->
+                <div class="flex-1 overflow-y-auto">
+
+                    <!-- Group Identity -->
+                    <div class="p-5 border-b border-gray-100 dark:border-gray-700 text-center">
+                        <div class="w-16 h-16 rounded-xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center mx-auto mb-3">
+                            {% if group.icon %}
+                                <img src="{{ group.icon.url }}" alt="{{ group.name }}" class="w-16 h-16 rounded-xl object-cover">
+                            {% else %}
+                                <i class="fas fa-users text-3xl text-primary"></i>
+                            {% endif %}
+                        </div>
+                        <h3 class="font-bold text-gray-900 dark:text-white text-lg"># {{ group.name }}</h3>
+                        {% if group.description %}
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ group.description }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Stats Row -->
+                    <div class="grid grid-cols-2 divide-x divide-gray-100 dark:divide-gray-700 border-b border-gray-100 dark:border-gray-700">
+                        <div class="p-4 text-center">
+                            <p class="text-xl font-bold text-gray-900 dark:text-white">{{ member_count }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Members</p>
+                        </div>
+                        <div class="p-4 text-center">
+                            <p class="text-xl font-bold text-gray-900 dark:text-white">{{ group.messages.count }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Messages</p>
+                        </div>
+                    </div>
+
+                    <!-- Your Role -->
+                    <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">Your Role</p>
+                        <div class="flex items-center gap-2">
+                            {% if is_group_admin %}
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded-full text-xs font-semibold">
+                                    <i class="fas fa-star text-[10px]"></i> Admin
+                                </span>
+                            {% elif is_member %}
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-xs font-semibold">
+                                    <i class="fas fa-check text-[10px]"></i> Member
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full text-xs font-semibold">
+                                    <i class="fas fa-eye text-[10px]"></i> Viewer
+                                </span>
+                            {% endif %}
+                            {% if group.is_public %}
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-xs font-semibold">
+                                    <i class="fas fa-globe text-[10px]"></i> Public
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full text-xs font-semibold">
+                                    <i class="fas fa-lock text-[10px]"></i> Private
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Admin Controls (only visible to admins) -->
+                    {% if is_group_admin %}
+                    <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-3">Admin Controls</p>
+                        <div class="space-y-2">
+                            <a href="{% url 'edit_group' group.id %}"
+                               class="flex items-center gap-3 px-3 py-2.5 bg-gray-50 dark:bg-gray-700/50 hover:bg-primary/10 dark:hover:bg-primary/20 rounded-lg transition group">
+                                <div class="w-8 h-8 rounded-lg bg-primary/10 dark:bg-primary/20 flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-edit text-primary text-xs"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-sm font-medium text-gray-800 dark:text-gray-100">Edit Group</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Update name, description & icon</p>
+                                </div>
+                                <i class="fas fa-chevron-right text-xs text-gray-400 ml-auto"></i>
+                            </a>
+                            <a href="{% url 'group_members' group.id %}"
+                               class="flex items-center gap-3 px-3 py-2.5 bg-gray-50 dark:bg-gray-700/50 hover:bg-primary/10 dark:hover:bg-primary/20 rounded-lg transition group">
+                                <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-users-cog text-blue-500 text-xs"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-sm font-medium text-gray-800 dark:text-gray-100">Manage Members</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Add or remove participants</p>
+                                </div>
+                                <i class="fas fa-chevron-right text-xs text-gray-400 ml-auto"></i>
+                            </a>
+                            <a href="{% url 'send_group_invite' group.id %}"
+                               class="flex items-center gap-3 px-3 py-2.5 bg-gray-50 dark:bg-gray-700/50 hover:bg-primary/10 dark:hover:bg-primary/20 rounded-lg transition group">
+                                <div class="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-user-plus text-green-500 text-xs"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-sm font-medium text-gray-800 dark:text-gray-100">Invite Members</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Share invite link</p>
+                                </div>
+                                <i class="fas fa-chevron-right text-xs text-gray-400 ml-auto"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Member Options (for all members) -->
+                    {% if is_member %}
+                    <div class="px-5 py-4">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-3">Actions</p>
+                        <form action="{% url 'leave_group' group.id %}" method="post" onsubmit="return confirm('Are you sure you want to leave this group?')">
+                            {% csrf_token %}
+                            <button type="submit"
+                                    class="w-full flex items-center gap-3 px-3 py-2.5 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition text-left">
+                                <div class="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-sign-out-alt text-red-500 text-xs"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-red-700 dark:text-red-400">Leave Group</p>
+                                    <p class="text-xs text-red-500/70 dark:text-red-400/70">You can rejoin anytime if public</p>
+                                </div>
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </aside>
+            {% endif %}
+
+            <!-- Main Content -->
+            <div class="flex-1 flex flex-col overflow-hidden">
+                <!-- Messages Container with HTMX -->
+                <div class="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6 bg-gray-50 dark:bg-gray-900 space-y-3" 
+                     id="messages-container"
+                     hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+                    
+                    <!-- Load More Messages Button (for HTMX infinite scroll) -->
+                    {% if messages %}
+                    <div hx-get="{% if conversation_type == 'direct' %}{% url 'load_message_history' other_user.id %}{% else %}{% url 'load_group_message_history' group.id %}{% endif %}?limit=20&offset={{ messages|length }}"
+                         hx-target="#messages-container"
+                         hx-swap="afterbegin"
+                         hx-trigger="intersect once"
+                         hx-indicator=".load-indicator"
+                         class="text-center py-2">
+                        <div class="text-sm text-gray-500 dark:text-gray-400 load-indicator" style="display: none;">
+                            <span class="inline-block px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded-full">
+                                <i class="fas fa-spinner fa-spin mr-1"></i>Loading earlier messages...
+                            </span>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Messages -->
+                    {% if messages %}
+                        {% for message in messages %}
+                        <div class="flex {% if message.sender == user %}justify-end{% else %}justify-start{% endif %} animate-fadeIn">
+                            <div class="flex gap-2 sm:gap-3 max-w-xs sm:max-w-md lg:max-w-lg {% if message.sender == user %}flex-row-reverse{% endif %}">
+                                <!-- Avatar -->
+                                {% if message.sender != user %}
+                                <div class="flex-shrink-0">
+                                    {% if message.sender.profile.image and message.sender.profile.image.url != '/media/default.jpg' %}
+                                    <img src="{{ message.sender.profile.image.url }}" alt="{{ message.sender|get_display_name }}" class="w-8 h-8 rounded-full object-cover">
+                                    {% else %}
+                                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white font-bold text-xs" title="{{ message.sender|get_avatar_label }}">
+                                        {{ message.sender|get_avatar_initials }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+
+                                <!-- Message Bubble -->
+                                <div class="flex flex-col {% if message.sender == user %}items-end{% else %}items-start{% endif %}">
+                                    {% if message.sender != user %}
+                                    <p class="text-xs font-bold text-gray-800 dark:text-gray-200 mb-1">{{ message.sender|get_display_name }}</p>
+                                    {% endif %}
+                                    <div class="px-3 sm:px-4 py-2 rounded-2xl {% if message.sender == user %}bg-primary text-white rounded-br-none{% else %}bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-none border border-gray-200 dark:border-gray-700{% endif %} shadow-sm break-words text-sm">
+                                        {% if message.attachment %}
+                                        <div class="mb-2">
+                                            {% with filename=message.attachment.url|lower %}
+                                                {% if filename|slice:"-4:" in ".jpg|.jpeg|.png|.gif|.webp" or ".jpg" in filename or ".jpeg" in filename or ".png" in filename or ".gif" in filename or ".webp" in filename %}
+                                                <img src="{{ message.attachment.url }}" alt="Attachment" class="max-w-xs rounded-lg cursor-pointer hover:opacity-80 transition" onclick="openImageModal('{{ message.attachment.url }}')">
+                                                {% elif filename|slice:"-4:" in ".mp4|.webm|.mov|.avi|.mkv" or ".mp4" in filename or ".webm" in filename or ".mov" in filename or ".avi" in filename or ".mkv" in filename %}
+                                                <video class="max-w-xs rounded-lg" controls>
+                                                    <source src="{{ message.attachment.url }}" type="video/mp4">
+                                                    Your browser does not support the video tag.
+                                                </video>
+                                                {% elif filename|slice:"-4:" in ".mp3|.wav|.ogg|.m4a|.flac" or ".mp3" in filename or ".wav" in filename or ".ogg" in filename or ".m4a" in filename or ".flac" in filename %}
+                                                <audio class="max-w-xs" controls>
+                                                    <source src="{{ message.attachment.url }}" type="audio/mpeg">
+                                                    Your browser does not support the audio element.
+                                                </audio>
+                                                {% else %}
+                                                <a href="{{ message.attachment.url }}" download class="inline-flex items-center gap-2 bg-opacity-20 {% if message.sender == user %}bg-white{% else %}bg-gray-200{% endif %} px-3 py-2 rounded-lg hover:opacity-80 transition">
+                                                    <i class="fas fa-file"></i>
+                                                    <span class="text-xs sm:text-sm">{{ message.attachment.name|slice:"24:" }}</span>
+                                                </a>
+                                                {% endif %}
+                                            {% endwith %}
+                                        </div>
+                                        {% endif %}
+                                        <p class="leading-relaxed">{{ message.content }}</p>
+                                    </div>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 px-2">
+                                        {{ message.created_at|date:"H:i" }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                    <div class="flex items-center justify-center h-full">
+                        <div class="text-center">
+                            <i class="fas fa-comments text-4 sm:text-6xl text-gray-300 dark:text-gray-600 mb-3 sm:mb-4"></i>
+                            <p class="text-gray-500 dark:text-gray-400 font-medium text-sm sm:text-base">No messages yet</p>
+                            <p class="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">Be the first to start the conversation!</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Message Input -->
+                {% if form %}
+                <div class="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 sm:px-6 py-3 sm:py-4">
+                    <!-- Form errors -->
+                    {% if form.non_field_errors %}
+                    <div class="mb-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                        {% for error in form.non_field_errors %}
+                        <p class="text-red-700 dark:text-red-400 text-sm">
+                            <i class="fas fa-exclamation-circle mr-2"></i>{{ error }}
+                        </p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Success message -->
+                    <div id="success-message" class="hidden mb-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg animate-fadeOut">
+                        <p class="text-green-700 dark:text-green-400 text-sm">
+                            <i class="fas fa-check-circle mr-2"></i>Message sent successfully!
+                        </p>
+                    </div>
+                    
+                    <form method="POST" enctype="multipart/form-data" class="flex flex-col gap-2" id="message-form">
+                        {% csrf_token %}
+                        <!-- File attachment display (Prominent) -->
+                        <div id="attachment-preview" class="hidden mb-3 bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border-2 border-dashed border-gray-300 dark:border-gray-600">
+                            <div class="flex flex-col gap-3">
+                                <!-- File preview content -->
+                                <div class="flex flex-col items-center justify-center py-6">
+                                    <div id="file-preview-icon" class="text-5xl mb-3">📄</div>
+                                    <p id="attachment-name" class="text-center font-semibold text-gray-700 dark:text-gray-300 break-words mb-1"></p>
+                                    <p id="attachment-size" class="text-xs text-gray-500 dark:text-gray-400"></p>
+                                </div>
+                                <!-- Caption input -->
+                                <textarea name="content" placeholder="Add a caption (optional)..." class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary resize-none" rows="2" style="max-height: 100px;"></textarea>
+                                <!-- Action buttons -->
+                                <div class="flex gap-2">
+                                    <button type="button" onclick="clearAttachment()" class="flex-1 px-3 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded hover:bg-red-200 dark:hover:bg-red-900/50 transition text-sm font-medium">
+                                        <i class="fas fa-trash mr-2"></i>Remove File
+                                    </button>
+                                    <button type="button" class="flex-1 px-4 py-2 bg-primary dark:bg-primary-dark text-white rounded hover:bg-primary-dark dark:hover:bg-primary-darker transition text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" id="send-btn-file">
+                                        <i class="fas fa-paper-plane"></i><span class="hidden sm:inline">Send</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Input row (Shown when no file selected) -->
+                        <div id="text-input-row" class="flex items-end gap-2 sm:gap-3">
+                            <!-- Emoji picker button -->
+                            <button type="button" id="emoji-btn" class="p-2 mb-1 text-gray-500 hover:text-primary dark:text-gray-400 hover:dark:text-primary rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition flex-shrink-0" title="Emoji">
+                                <i class="fas fa-smile"></i>
+                            </button>
+                            
+                            <!-- File attachment button -->
+                            <button type="button" onclick="document.getElementById('id_attachment').click()" class="p-2 mb-1 text-gray-500 hover:text-primary dark:text-gray-400 hover:dark:text-primary rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition flex-shrink-0" title="Attach file (max 50 MB)">
+                                <i class="fas fa-paperclip"></i>
+                            </button>
+                            
+                            <!-- Hidden file input -->
+                            {{ form.attachment }}
+                            
+                            <!-- Message content -->
+                            <div class="flex-1">
+                                {{ form.content }}
+                            </div>
+                            
+                            <!-- Send button -->
+                            <button type="button" id="send-message-btn" class="mb-1 w-10 h-10 sm:w-auto sm:h-auto sm:px-4 sm:py-2.5 bg-primary text-white rounded-full hover:bg-primary-dark transition font-medium flex-shrink-0 flex items-center justify-center gap-1 sm:gap-2 whitespace-nowrap text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i class="fas fa-paper-plane"></i><span class="hidden sm:inline">Send</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Emoji picker -->
+                        <div id="emoji-picker" class="hidden bg-gray-100 dark:bg-gray-700 p-3 rounded-lg mb-2">
+                            <div class="grid grid-cols-8 gap-2 max-h-32 overflow-y-auto">
+                                <button type="button" onclick="insertEmoji('😀')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😀</button>
+                                <button type="button" onclick="insertEmoji('😀')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😃</button>
+                                <button type="button" onclick="insertEmoji('😄')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😄</button>
+                                <button type="button" onclick="insertEmoji('😁')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😁</button>
+                                <button type="button" onclick="insertEmoji('😆')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😆</button>
+                                <button type="button" onclick="insertEmoji('😅')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😅</button>
+                                <button type="button" onclick="insertEmoji('🤣')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🤣</button>
+                                <button type="button" onclick="insertEmoji('😂')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😂</button>
+                                <button type="button" onclick="insertEmoji('😊')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😊</button>
+                                <button type="button" onclick="insertEmoji('😇')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😇</button>
+                                <button type="button" onclick="insertEmoji('🙂')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🙂</button>
+                                <button type="button" onclick="insertEmoji('🙃')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🙃</button>
+                                <button type="button" onclick="insertEmoji('😉')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😉</button>
+                                <button type="button" onclick="insertEmoji('😌')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😌</button>
+                                <button type="button" onclick="insertEmoji('😍')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😍</button>
+                                <button type="button" onclick="insertEmoji('🥰')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🥰</button>
+                                <button type="button" onclick="insertEmoji('😘')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😘</button>
+                                <button type="button" onclick="insertEmoji('😗')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😗</button>
+                                <button type="button" onclick="insertEmoji('😚')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😚</button>
+                                <button type="button" onclick="insertEmoji('😙')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😙</button>
+                                <button type="button" onclick="insertEmoji('🥲')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🥲</button>
+                                <button type="button" onclick="insertEmoji('😋')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😋</button>
+                                <button type="button" onclick="insertEmoji('😛')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😛</button>
+                                <button type="button" onclick="insertEmoji('😜')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😜</button>
+                                <button type="button" onclick="insertEmoji('🤪')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🤪</button>
+                                <button type="button" onclick="insertEmoji('😝')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😝</button>
+                                <button type="button" onclick="insertEmoji('🤑')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🤑</button>
+                                <button type="button" onclick="insertEmoji('🤗')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🤗</button>
+                                <button type="button" onclick="insertEmoji('🤭')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🤭</button>
+                                <button type="button" onclick="insertEmoji('🤫')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🤫</button>
+                                <button type="button" onclick="insertEmoji('🤔')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🤔</button>
+                                <button type="button" onclick="insertEmoji('🤐')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🤐</button>
+                                <button type="button" onclick="insertEmoji('🤨')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🤨</button>
+                                <button type="button" onclick="insertEmoji('😐')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😐</button>
+                                <button type="button" onclick="insertEmoji('😑')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😑</button>
+                                <button type="button" onclick="insertEmoji('😶')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😶</button>
+                                <button type="button" onclick="insertEmoji('😏')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😏</button>
+                                <button type="button" onclick="insertEmoji('😒')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😒</button>
+                                <button type="button" onclick="insertEmoji('🙄')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🙄</button>
+                                <button type="button" onclick="insertEmoji('😬')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😬</button>
+                                <button type="button" onclick="insertEmoji('😌')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😌</button>
+                                <button type="button" onclick="insertEmoji('😔')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😔</button>
+                                <button type="button" onclick="insertEmoji('😪')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😪</button>
+                                <button type="button" onclick="insertEmoji('🤤')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🤤</button>
+                                <button type="button" onclick="insertEmoji('😴')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😴</button>
+                                <button type="button" onclick="insertEmoji('😷')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😷</button>
+                                <button type="button" onclick="insertEmoji('🤒')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🤒</button>
+                                <button type="button" onclick="insertEmoji('🤕')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🤕</button>
+                                <button type="button" onclick="insertEmoji('🤮')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🤮</button>
+                                <button type="button" onclick="insertEmoji('🤢')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🤢</button>
+                                <button type="button" onclick="insertEmoji('🤮')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🤮</button>
+                                <button type="button" onclick="insertEmoji('🤧')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🤧</button>
+                                <button type="button" onclick="insertEmoji('🤥')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🤥</button>
+                                <button type="button" onclick="insertEmoji('🥵')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🥵</button>
+                                <button type="button" onclick="insertEmoji('🥶')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🥶</button>
+                                <button type="button" onclick="insertEmoji('😵')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😵</button>
+                                <button type="button" onclick="insertEmoji('🤯')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🤯</button>
+                                <button type="button" onclick="insertEmoji('🤠')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🤠</button>
+                                <button type="button" onclick="insertEmoji('🥳')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🥳</button>
+                                <button type="button" onclick="insertEmoji('😎')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😎</button>
+                                <button type="button" onclick="insertEmoji('🤓')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🤓</button>
+                                <button type="button" onclick="insertEmoji('🧐')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🧐</button>
+                                <button type="button" onclick="insertEmoji('😕')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😕</button>
+                                <button type="button" onclick="insertEmoji('😟')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😟</button>
+                                <button type="button" onclick="insertEmoji('🙁')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🙁</button>
+                                <button type="button" onclick="insertEmoji('☹️')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">☹️</button>
+                                <button type="button" onclick="insertEmoji('😮')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😮</button>
+                                <button type="button" onclick="insertEmoji('😯')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😯</button>
+                                <button type="button" onclick="insertEmoji('😲')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😲</button>
+                                <button type="button" onclick="insertEmoji('😳')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😳</button>
+                                <button type="button" onclick="insertEmoji('🥺')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🥺</button>
+                                <button type="button" onclick="insertEmoji('😦')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😦</button>
+                                <button type="button" onclick="insertEmoji('😧')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😧</button>
+                                <button type="button" onclick="insertEmoji('😨')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😨</button>
+                                <button type="button" onclick="insertEmoji('😰')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😰</button>
+                                <button type="button" onclick="insertEmoji('😥')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😥</button>
+                                <button type="button" onclick="insertEmoji('😢')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😢</button>
+                                <button type="button" onclick="insertEmoji('😭')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😭</button>
+                                <button type="button" onclick="insertEmoji('😱')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😱</button>
+                                <button type="button" onclick="insertEmoji('😖')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😖</button>
+                                <button type="button" onclick="insertEmoji('😣')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😣</button>
+                                <button type="button" onclick="insertEmoji('😞')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😞</button>
+                                <button type="button" onclick="insertEmoji('😓')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😓</button>
+                                <button type="button" onclick="insertEmoji('😩')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😩</button>
+                                <button type="button" onclick="insertEmoji('😫')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😫</button>
+                                <button type="button" onclick="insertEmoji('🥱')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🥱</button>
+                                <button type="button" onclick="insertEmoji('😤')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😤</button>
+                                <button type="button" onclick="insertEmoji('😡')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😡</button>
+                                <button type="button" onclick="insertEmoji('😠')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😠</button>
+                                <button type="button" onclick="insertEmoji('🤬')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🤬</button>
+                                <button type="button" onclick="insertEmoji('😈')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😈</button>
+                                <button type="button" onclick="insertEmoji('👿')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">👿</button>
+                                <button type="button" onclick="insertEmoji('💀')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">💀</button>
+                                <button type="button" onclick="insertEmoji('☠️')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">☠️</button>
+                                <button type="button" onclick="insertEmoji('💩')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">💩</button>
+                                <button type="button" onclick="insertEmoji('🤡')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🤡</button>
+                                <button type="button" onclick="insertEmoji('👹')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">👹</button>
+                                <button type="button" onclick="insertEmoji('👺')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">👺</button>
+                                <button type="button" onclick="insertEmoji('👻')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">👻</button>
+                                <button type="button" onclick="insertEmoji('👽')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">👽</button>
+                                <button type="button" onclick="insertEmoji('👾')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">👾</button>
+                                <button type="button" onclick="insertEmoji('🤖')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🤖</button>
+                                <button type="button" onclick="insertEmoji('😺')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😺</button>
+                                <button type="button" onclick="insertEmoji('😸')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😸</button>
+                                <button type="button" onclick="insertEmoji('😹')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😹</button>
+                                <button type="button" onclick="insertEmoji('😻')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😻</button>
+                                <button type="button" onclick="insertEmoji('😼')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😼</button>
+                                <button type="button" onclick="insertEmoji('😽')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😽</button>
+                                <button type="button" onclick="insertEmoji('🙀')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">🙀</button>
+                                <button type="button" onclick="insertEmoji('😿')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😿</button>
+                                <button type="button" onclick="insertEmoji('😾')" class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-lg">😾</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                {% else %}
+                {% if conversation_type == 'group' and group %}
+                <div class="border-t border-gray-200 dark:border-gray-700 bg-blue-50 dark:bg-blue-900/20 px-3 sm:px-6 py-3">
+                    <p class="text-blue-800 dark:text-blue-300 text-xs sm:text-sm text-center">
+                        <i class="fas fa-info-circle mr-2"></i>Join this group to start chatting
+                    </p>
+                </div>
+                {% endif %}
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    /* Hide the chatbot toggle in chat view to prevent overlap with message input */
+    #chatbotToggle, #chatbotBox {
+        display: none !important;
+    }
+
+    /* Chat list animations */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+    
+    .animate-fadeIn {
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    /* Form styling */
+    textarea {
+        resize: none;
+        max-height: 100px;
+    }
+
+    /* Image lightbox modal */
+    #image-modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    #image-modal.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-content {
+        position: relative;
+        max-width: 90vw;
+        max-height: 90vh;
+        margin: auto;
+    }
+
+    .modal-image {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .modal-close {
+        position: absolute;
+        top: -30px;
+        right: 0;
+        color: #fff;
+        font-size: 32px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: text-shadow 0.2s;
+    }
+
+    .modal-close:hover {
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+</style>
+
+<!-- Image Lightbox Modal -->
+<div id="image-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
+    <div class="relative max-w-4xl max-h-screen">
+        <span class="absolute -top-12 right-0 text-white text-4xl font-bold cursor-pointer hover:text-gray-300 transition" onclick="closeImageModal()">&times;</span>
+        <img id="modal-image" src="" alt="Full size image" class="max-w-full max-h-screen object-contain rounded-lg">
+    </div>
+</div>
+
+<script>
+    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+
+    // Emoji picker toggle
+    document.getElementById('emoji-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        const picker = document.getElementById('emoji-picker');
+        picker.classList.toggle('hidden');
+    });
+
+    // Emoji insertion
+    function insertEmoji(emoji) {
+        const textarea = document.getElementById('id_content');
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const text = textarea.value;
+        textarea.value = text.substring(0, start) + emoji + text.substring(end);
+        textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
+        textarea.focus();
+    }
+
+    // Search functionality for chat sidebar
+    const chatSearchInput = document.getElementById('chat-search-input');
+    if (chatSearchInput) {
+        chatSearchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const chatItems = document.querySelectorAll('.sidebar-chat-item');
+            
+            chatItems.forEach(item => {
+                const name = item.getAttribute('data-name') || '';
+                const msg = item.getAttribute('data-msg') || '';
+                
+                if (name.includes(searchTerm) || msg.includes(searchTerm)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    }
+
+    // Format file size
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+    }
+
+    // Get file icon based on file type
+    function getFileIcon(filename) {
+        const ext = filename.toLowerCase().split('.').pop();
+        const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        const videoExts = ['mp4', 'webm', 'mov', 'avi', 'mkv'];
+        const audioExts = ['mp3', 'wav', 'ogg', 'm4a', 'flac'];
+        const docExts = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt'];
+        
+        if (imageExts.includes(ext)) return '🖼️';
+        if (videoExts.includes(ext)) return '🎥';
+        if (audioExts.includes(ext)) return '🎵';
+        if (docExts.includes(ext)) return '📄';
+        return '📎';
+    }
+
+    // File attachment handling with validation
+    document.getElementById('id_attachment').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Validate file size
+            if (file.size > MAX_FILE_SIZE) {
+                alert('File size exceeds 50 MB limit. Please choose a smaller file.');
+                this.value = '';
+                document.getElementById('attachment-preview').classList.add('hidden');
+                document.getElementById('text-input-row').classList.remove('hidden');
+                return;
+            }
+
+            const preview = document.getElementById('attachment-preview');
+            const nameEl = document.getElementById('attachment-name');
+            const sizeEl = document.getElementById('attachment-size');
+            const iconEl = document.getElementById('file-preview-icon');
+            const textRow = document.getElementById('text-input-row');
+            
+            // Update icon based on file type
+            iconEl.textContent = getFileIcon(file.name);
+            nameEl.textContent = file.name;
+            sizeEl.textContent = formatFileSize(file.size);
+            
+            // Show file preview, hide text input row
+            preview.classList.remove('hidden');
+            textRow.classList.add('hidden');
+            
+            // Move textarea from text-input-row to attachment-preview
+            const textarea = document.querySelector('#attachment-preview textarea[name="content"]');
+            if (textarea) {
+                textarea.focus();
+            }
+        }
+    });
+
+    // Clear attachment
+    function clearAttachment() {
+        document.getElementById('id_attachment').value = '';
+        document.getElementById('attachment-preview').classList.add('hidden');
+        
+        // Also clear the caption textarea
+        const captionTextarea = document.querySelector('#attachment-preview textarea[name="content"]');
+        if (captionTextarea) {
+            captionTextarea.value = '';
+        }
+        
+        document.getElementById('text-input-row').classList.remove('hidden');
+        document.getElementById('id_content').focus();
+    }
+
+    // Form submission handling
+    document.getElementById('message-form').addEventListener('submit', function(e) {
+        const textarea = document.getElementById('id_content');
+        const fileInput = document.getElementById('id_attachment');
+        const sendBtn = document.getElementById('send-btn');
+        const sendBtnFile = document.getElementById('send-btn-file');
+        
+        // Disable both send buttons while submitting
+        if (sendBtn) {
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin text-xs sm:text-base"></i><span class="hidden sm:inline">Sending</span>';
+        }
+        if (sendBtnFile) {
+            sendBtnFile.disabled = true;
+            sendBtnFile.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span class="hidden sm:inline">Sending</span>';
+        }
+        
+        // Clear form after successful submission (happens after page reloads)
+        setTimeout(function() {
+            if (textarea.value.trim() === '' && !fileInput.value) {
+                // Form was successfully submitted, already reset by server
+            }
+        }, 2000);
+    });
+
+    // Show success message if form was reloaded (after submit)
+    window.addEventListener('load', function() {
+        const successMsg = document.getElementById('success-message');
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        if (successMsg && document.referrer.includes(window.location.pathname)) {
+            // Form was just submitted and page reloaded
+            successMsg.classList.remove('hidden');
+            
+            // Hide success message after 3 seconds
+            setTimeout(function() {
+                successMsg.classList.add('hidden');
+            }, 3000);
+        }
+    });
+
+    // Auto-scroll to latest message
+    const messagesContainer = document.getElementById('messages-container');
+    if (messagesContainer) {
+        setTimeout(function() {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }, 100);
+    }
+
+    // Click outside to close emoji picker
+    document.addEventListener('click', function(e) {
+        const picker = document.getElementById('emoji-picker');
+        const btn = document.getElementById('emoji-btn');
+        if (picker && !picker.contains(e.target) && btn && !btn.contains(e.target)) {
+            picker.classList.add('hidden');
+        }
+    });
+
+    // Image lightbox functions
+    function openImageModal(imageUrl) {
+        const modal = document.getElementById('image-modal');
+        const modalImage = document.getElementById('modal-image');
+        modalImage.src = imageUrl;
+        modal.classList.remove('hidden');
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeImageModal() {
+        const modal = document.getElementById('image-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('show');
+        document.body.style.overflow = 'auto';
+    }
+
+    // Close modal when clicking outside the image
+    document.getElementById('image-modal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeImageModal();
+        }
+    });
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeImageModal();
+            closeGroupInfo();
+        }
+    });
+
+    // Group Info Panel
+    const groupInfoBtn = document.getElementById('groupInfoBtn');
+    if (groupInfoBtn) {
+        groupInfoBtn.addEventListener('click', function () {
+            document.getElementById('groupInfoPanel').classList.remove('hidden');
+            document.getElementById('groupInfoOverlay').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        });
+    }
+
+</script>
+
+<script>
+    function closeGroupInfo() {
+        const panel = document.getElementById('groupInfoPanel');
+        const overlay = document.getElementById('groupInfoOverlay');
+        if (panel) panel.classList.add('hidden');
+        if (overlay) overlay.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+</script>
+
+<!-- WebSocket Client Library -->
+<script src="{% static 'community/js/websocket-client.js' %}"></script>
+
+<!-- WebSocket Chat Initialization -->
+{% include 'community/includes/websocket_chat_init.html' %}
+
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends 'home/base.html' %}
+{% load static %}
+
+{% block title %}Broadcast to Course{% endblock %}
+
+{% block content %}
+<div class="flex-1 overflow-y-auto">
+    <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+                <i class="fas fa-bullhorn text-primary mr-2"></i>Broadcast to Course
+            </h1>
+            <p class="mt-2 text-gray-600 dark:text-gray-400">Send a message to all participants in your course</p>
+        </div>
+
+        <!-- Form -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-8">
+            <form method="POST" class="space-y-6">
+                {% csrf_token %}
+
+                <!-- Course Selection -->
+                <div>
+                    <label for="{{ form.course.id_for_label }}" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                        Select Course <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.course }}
+                    {% if form.course.errors %}
+                    <div class="mt-2 text-sm text-red-600 dark:text-red-400">
+                        {% for error in form.course.errors %}
+                        <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Choose which course to broadcast to</p>
+                </div>
+
+                <!-- Subject -->
+                <div>
+                    <label for="{{ form.subject.id_for_label }}" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                        Subject <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.subject }}
+                    {% if form.subject.errors %}
+                    <div class="mt-2 text-sm text-red-600 dark:text-red-400">
+                        {% for error in form.subject.errors %}
+                        <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">What is your message about?</p>
+                </div>
+
+                <!-- Message Content -->
+                <div>
+                    <label for="{{ form.content.id_for_label }}" class="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                        Message <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.content }}
+                    {% if form.content.errors %}
+                    <div class="mt-2 text-sm text-red-600 dark:text-red-400">
+                        {% for error in form.content.errors %}
+                        <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Compose your broadcast message</p>
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex gap-4 pt-4">
+                    <button type="submit" class="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition font-medium">
+                        <i class="fas fa-paper-plane mr-2"></i>Send Broadcast
+                    </button>
+                    <a href="{% url 'home' %}" class="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition text-center font-medium">
+                        <i class="fas fa-times mr-2"></i>Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Info Box -->
+        <div class="mt-8 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-6">
+            <h3 class="font-semibold text-blue-900 dark:text-blue-100 mb-2">Broadcasting Guidelines</h3>
+            <ul class="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                <li><i class="fas fa-check mr-2"></i>Messages will be sent to all enrolled participants</li>
+                <li><i class="fas fa-check mr-2"></i>Keep messages clear and concise</li>
+                <li><i class="fas fa-check mr-2"></i>Include important course updates and announcements</li>
+                <li><i class="fas fa-check mr-2"></i>All participants will be notified of the broadcast</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

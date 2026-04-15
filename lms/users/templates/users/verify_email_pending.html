@@ -1,0 +1,76 @@
+{% extends 'users/auth_base.html' %}
+
+{% block title %}Verify Email | Kuza Ndoto Academy{% endblock %}
+
+{% block auth_subtitle %}Security Check{% endblock %}
+
+{% block extra_head %}
+<style>
+    .otp-input { 
+        letter-spacing: 0.75em; 
+        font-size: 1.5rem; 
+        font-weight: 700; 
+        text-align: center; 
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="text-center mb-6">
+    <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-primary-light mb-4">
+        <i class="fas fa-envelope-open-text text-2xl text-primary"></i>
+    </div>
+    <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Verify Your Email</h2>
+    <p class="mt-2 text-sm text-gray-600">A 6-digit code has been sent to your email.</p>
+</div>
+
+<form method="POST" class="space-y-5">
+    {% csrf_token %}
+    
+    <div>
+        <label for="email" class="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
+        <div class="relative rounded-xl shadow-sm">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <i class="fas fa-envelope text-gray-400"></i>
+            </div>
+            <input id="email" name="email" type="email" value="{{ email }}" required
+                   class="block w-full pl-11 pr-4 py-3 rounded-xl border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-shadow sm:text-sm"
+                   placeholder="Enter your registered email">
+        </div>
+    </div>
+    
+    <div>
+        <label for="otp" class="block text-sm font-semibold text-gray-700 mb-1">Verification Code</label>
+        <input id="otp" name="otp" type="text" maxlength="6" pattern="\d{6}" required
+               class="block w-full px-4 py-4 rounded-xl border border-gray-300 text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-shadow otp-input"
+               placeholder="000000" autocomplete="off">
+        <p class="mt-2 text-xs text-center text-gray-500">The verification code will expire in 10 minutes.</p>
+    </div>
+    
+    <button type="submit" class="w-full flex justify-center items-center py-3 px-4 rounded-xl text-sm font-bold text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary shadow-md transition-colors mt-2">
+        <i class="fas fa-check-circle mr-2"></i> Verify Email
+    </button>
+</form>
+
+<div class="mt-8 relative flex items-center justify-center w-full">
+    <hr class="w-full h-px bg-gray-200 border-0">
+    <span class="absolute px-3 bg-white text-xs font-medium text-gray-400 uppercase tracking-wider">Didn't receive the code?</span>
+</div>
+
+<div class="mt-6 flex flex-col space-y-3">
+    <a href="{% url 'resend_verification' %}" class="w-full flex justify-center items-center py-2.5 px-4 rounded-xl border border-gray-300 text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors shadow-sm">
+        <i class="fas fa-redo mr-2 text-gray-400"></i> Request New Code
+    </a>
+    <a href="{% url 'register' %}" class="text-center text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors mt-2 block">
+        &larr; Back to Registration
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('otp').addEventListener('input', function(e) {
+        e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
+    });
+</script>
+{% endblock %}

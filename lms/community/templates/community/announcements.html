@@ -1,0 +1,87 @@
+{% extends 'home/base.html' %}
+{% load static %}
+
+{% block title %}Announcements - Kuza Ndoto Academy{% endblock %}
+
+{% block content %}
+<main class="flex-1 p-3 pb-20 sm:p-6 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex items-center gap-3 mb-2">
+            <a href="{% url 'community_hub' %}" class="text-gray-500 hover:text-primary dark:text-gray-400 dark:hover:text-primary-light transition">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Announcements</h1>
+        </div>
+        <p class="text-sm text-gray-600 dark:text-gray-400 ml-7">
+            Important broadcasts and updates from your course instructors.
+        </p>
+    </div>
+
+    <!-- Feed Container -->
+    <div class="max-w-4xl mx-auto space-y-4 sm:space-y-6">
+        {% if broadcasts %}
+            {% for broadcast in broadcasts %}
+                <!-- Announcement Card -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow">
+                    
+                    <!-- Card Header -->
+                    <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="flex-shrink-0">
+                                {% if broadcast.instructor.profile.image %}
+                                    <img src="{{ broadcast.instructor.profile.image.url }}" alt="{{ broadcast.instructor.get_full_name|default:broadcast.instructor.username }}" class="w-10 h-10 rounded-full object-cover border border-gray-200 dark:border-gray-600">
+                                {% else %}
+                                    <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold border border-primary/20">
+                                        {{ broadcast.instructor.get_full_name|default:broadcast.instructor.username|make_list|first|upper }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <h3 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white leading-tight">
+                                    {{ broadcast.subject }}
+                                </h3>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                    <i class="fas fa-user-tie mr-1"></i>
+                                    {{ broadcast.instructor.get_full_name|default:broadcast.instructor.username }}
+                                    <span class="mx-1">•</span>
+                                    <a href="{% url 'course_detail' broadcast.course.id %}" class="hover:text-primary dark:hover:text-primary-light transition font-medium">
+                                        {{ broadcast.course.title }}
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-center text-xs text-gray-400 dark:text-gray-500 flex-shrink-0 self-start sm:self-center ml-12 sm:ml-0">
+                            <i class="far fa-clock mr-1.5"></i>
+                            {{ broadcast.created_at|date:"M j, Y, g:i a" }}
+                        </div>
+                    </div>
+
+                    <!-- Card Body -->
+                    <div class="p-4 sm:p-6 prose prose-sm sm:prose-base dark:prose-invert max-w-none text-gray-800 dark:text-gray-200">
+                        {{ broadcast.content|safe }}
+                    </div>
+                    
+                </div>
+            {% endfor %}
+            
+        {% else %}
+            <!-- Empty State -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 sm:p-12 text-center">
+                <div class="inline-flex h-20 w-20 items-center justify-center rounded-full bg-gray-50 dark:bg-gray-700 mb-6 border-8 border-gray-100 dark:border-gray-600">
+                    <i class="fas fa-inbox text-3xl text-gray-400 dark:text-gray-500"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">No Announcements Yet</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
+                    You haven't received any broadcasts from your instructors. When they post an announcement, it will appear here.
+                </p>
+                <div class="mt-8">
+                    <a href="{% url 'courses' %}" class="inline-flex items-center justify-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition font-medium text-sm">
+                        <i class="fas fa-graduation-cap mr-2"></i> Go to My Courses
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</main>
+{% endblock %}

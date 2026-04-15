@@ -1,0 +1,100 @@
+{% extends 'home/base.html' %}
+{% load static %}
+
+{% block title %}Preview Promotional Email{% endblock %}
+
+{% block content %}
+<div class="flex-1 overflow-y-auto">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Review Promotional Email</h1>
+            <p class="mt-2 text-gray-600 dark:text-gray-400">Please review before sending</p>
+        </div>
+
+        <!-- Recipient & Audience Info -->
+        <div class="bg-blue-50 dark:bg-blue-900 dark:bg-opacity-30 border-l-4 border-blue-500 p-4 mb-8 rounded-lg">
+            <div class="flex items-start">
+                <i class="fas fa-info-circle text-blue-500 mt-1 mr-3 flex-shrink-0"></i>
+                <div>
+                    <p class="text-sm font-medium text-blue-900 dark:text-blue-200">
+                        Target Audience: <strong>{{ target_audience_display }}</strong>
+                    </p>
+                    <p class="text-sm text-blue-800 dark:text-blue-300 mt-1">
+                        Recipients: <strong>{{ recipients_count }} user(s)</strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Email Preview -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden mb-8">
+            <!-- Subject -->
+            <div class="border-b border-gray-200 dark:border-gray-700 p-6">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    <i class="fas fa-heading text-primary mr-2"></i>{{ subject }}
+                </h2>
+            </div>
+
+            <!-- Body -->
+            <div class="p-6">
+                <div class="prose dark:prose-invert max-w-none whitespace-pre-wrap text-gray-700 dark:text-gray-300">
+                    {{ body }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recipients Summary -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden mb-8">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    <i class="fas fa-chart-pie text-primary mr-2"></i>Recipients Breakdown
+                </h3>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-6">
+                {% if target_audience == 'all' or target_audience == 'students' %}
+                <div class="bg-blue-50 dark:bg-blue-900 dark:bg-opacity-30 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Students</p>
+                    <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ students_count }}</p>
+                </div>
+                {% endif %}
+                
+                {% if target_audience == 'all' or target_audience == 'instructors' %}
+                <div class="bg-green-50 dark:bg-green-900 dark:bg-opacity-30 p-4 rounded-lg border border-green-200 dark:border-green-700">
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Instructors</p>
+                    <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ instructors_count }}</p>
+                </div>
+                {% endif %}
+                
+                {% if target_audience == 'all' %}
+                <div class="bg-purple-50 dark:bg-purple-900 dark:bg-opacity-30 p-4 rounded-lg border border-purple-200 dark:border-purple-700">
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Total Users</p>
+                    <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">{{ recipients_count }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Warning Message -->
+        <div class="bg-yellow-50 dark:bg-yellow-900 dark:bg-opacity-20 border-l-4 border-yellow-500 p-4 mb-8 rounded-lg">
+            <p class="text-sm text-yellow-800 dark:text-yellow-200">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                <strong>Important:</strong> This email will be sent to <strong>{{ recipients_count }}</strong> user(s). Please ensure the content is appropriate before sending.
+            </p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-4">
+            <form method="post" class="flex-1">
+                {% csrf_token %}
+                <button type="submit" class="w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition">
+                    <i class="fas fa-check mr-2"></i>Send to {{ recipients_count }} {{ target_audience_display|lower }}
+                </button>
+            </form>
+            <a href="{% url 'promotional_email' %}" class="flex-1 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition text-center">
+                <i class="fas fa-arrow-left mr-2"></i>Edit
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

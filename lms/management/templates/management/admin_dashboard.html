@@ -1,0 +1,251 @@
+{% extends 'home/base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="flex-1 overflow-y-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Admin Dashboard</h1>
+            <p class="mt-2 text-gray-600 dark:text-gray-400">Welcome back! Here's an overview of your LMS.</p>
+        </div>
+
+        <!-- Key Metrics Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <!-- Users Card -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Total Users</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ total_users }}</p>
+                    </div>
+                    <div class="text-4xl text-blue-500 opacity-20">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                        <span class="font-semibold">{{ new_users_30d }}</span> new users this month
+                    </p>
+                </div>
+            </div>
+
+            <!-- Courses Card -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Total Courses</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ total_courses }}</p>
+                    </div>
+                    <div class="text-4xl text-green-500 opacity-20">
+                        <i class="fas fa-book"></i>
+                    </div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                        <span class="font-semibold">{{ total_students_enrolled }}</span> students enrolled
+                    </p>
+                </div>
+            </div>
+
+            <!-- eBooks Card -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Total eBooks</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ total_ebooks }}</p>
+                    </div>
+                    <div class="text-4xl text-purple-500 opacity-20">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                        <span class="font-semibold">{{ published_ebooks }}</span> published
+                    </p>
+                </div>
+            </div>
+
+            <!-- Quizzes Card -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Total Quizzes</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ total_quizzes }}</p>
+                    </div>
+                    <div class="text-4xl text-orange-500 opacity-20">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                        <span class="font-semibold">{{ total_quiz_attempts }}</span> attempts
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Statistics -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- User Breakdown Card -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">User Breakdown</h2>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 rounded-full bg-blue-500 mr-3"></div>
+                            <span class="text-gray-600 dark:text-gray-400">Students</span>
+                        </div>
+                        <span class="text-lg font-semibold text-gray-900 dark:text-white">{{ total_students }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 rounded-full bg-green-500 mr-3"></div>
+                            <span class="text-gray-600 dark:text-gray-400">Instructors</span>
+                        </div>
+                        <span class="text-lg font-semibold text-gray-900 dark:text-white">{{ total_instructors }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 rounded-full bg-yellow-500 mr-3"></div>
+                            <span class="text-gray-600 dark:text-gray-400">Admins</span>
+                        </div>
+                        <span class="text-lg font-semibold text-gray-900 dark:text-white">{{ total_admins }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 rounded-full bg-red-500 mr-3"></div>
+                            <span class="text-gray-600 dark:text-gray-400">Superusers</span>
+                        </div>
+                        <span class="text-lg font-semibold text-gray-900 dark:text-white">{{ total_superusers }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Platform Growth Card -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Platform Growth</h2>
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-600 dark:text-gray-400">This Week Signups</span>
+                            <span class="text-sm font-bold text-gray-900 dark:text-white">{{ current_week_signups }}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                            <div class="bg-blue-500 h-2 rounded-full" style="width: {% widthratio current_week_signups total_users 100 %}%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Last Week Signups</span>
+                            <span class="text-sm font-bold text-gray-900 dark:text-white">{{ previous_week_signups }}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                            <div class="bg-green-500 h-2 rounded-full" style="width: {% widthratio previous_week_signups total_users 100 %}%"></div>
+                        </div>
+                    </div>
+                    <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <div class="flex items-center">
+                            <span class="text-gray-600 dark:text-gray-400">Growth Rate:</span>
+                            <span class="ml-2 text-lg font-bold {% if growth_percentage > 0 %}text-green-500{% elif growth_percentage < 0 %}text-red-500{% else %}text-gray-500{% endif %}">
+                                {% if growth_percentage > 0 %}
+                                    <i class="fas fa-arrow-up"></i> 
+                                {% elif growth_percentage < 0 %}
+                                    <i class="fas fa-arrow-down"></i> 
+                                {% endif %}
+                                {{ growth_percentage|floatformat:2 }}%
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Instructors and Courses -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Top Instructors -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Top Instructors</h2>
+                {% if top_instructors %}
+                <div class="space-y-4">
+                    {% for instructor in top_instructors %}
+                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div class="flex items-center">
+                            {% if instructor.profile.image %}
+                            <img src="{{ instructor.profile.image.url }}" alt="{{ instructor.get_full_name }}" class="w-10 h-10 rounded-full mr-4">
+                            {% else %}
+                            <div class="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 mr-4 flex items-center justify-center">
+                                <i class="fas fa-user text-gray-500"></i>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <p class="font-semibold text-gray-900 dark:text-white">{{ instructor.get_full_name|default:instructor.email }}</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">{{ instructor.email }}</p>
+                            </div>
+                        </div>
+                        <span class="text-lg font-bold text-primary">{{ instructor.course_count }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-gray-500 dark:text-gray-400 text-center py-8">No instructors yet</p>
+                {% endif %}
+            </div>
+
+            <!-- Top Courses -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Top Courses</h2>
+                {% if top_courses %}
+                <div class="space-y-4">
+                    {% for course in top_courses %}
+                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div class="flex items-center">
+                            {% if course.image %}
+                            <img src="{{ course.image.url }}" alt="{{ course.title }}" class="w-10 h-10 rounded mr-4">
+                            {% else %}
+                            <div class="w-10 h-10 rounded bg-gray-300 dark:bg-gray-600 mr-4 flex items-center justify-center">
+                                <i class="fas fa-book text-gray-500"></i>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <p class="font-semibold text-gray-900 dark:text-white">{{ course.title }}</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">{{ course.category }}</p>
+                            </div>
+                        </div>
+                        <span class="text-lg font-bold text-primary">{{ course.enrollment_count }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-gray-500 dark:text-gray-400 text-center py-8">No courses yet</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Quick Actions</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <a href="{% url 'user_management' %}" class="block p-4 bg-blue-50 dark:bg-blue-900 rounded-lg text-center hover:bg-blue-100 dark:hover:bg-blue-800 transition">
+                    <i class="fas fa-users text-2xl text-blue-500 mb-2"></i>
+                    <p class="font-semibold text-gray-900 dark:text-white">Manage Users</p>
+                </a>
+                <a href="{% url 'user_rights_management' %}" class="block p-4 bg-green-50 dark:bg-green-900 rounded-lg text-center hover:bg-green-100 dark:hover:bg-green-800 transition">
+                    <i class="fas fa-shield-alt text-2xl text-green-500 mb-2"></i>
+                    <p class="font-semibold text-gray-900 dark:text-white">User Rights</p>
+                </a>
+                <a href="{% url 'admin:index' %}" class="block p-4 bg-purple-50 dark:bg-purple-900 rounded-lg text-center hover:bg-purple-100 dark:hover:bg-purple-800 transition">
+                    <i class="fas fa-cog text-2xl text-purple-500 mb-2"></i>
+                    <p class="font-semibold text-gray-900 dark:text-white">Django Admin</p>
+                </a>
+                <a href="{% url 'home' %}" class="block p-4 bg-gray-50 dark:bg-gray-700 rounded-lg text-center hover:bg-gray-100 dark:hover:bg-gray-600 transition">
+                    <i class="fas fa-home text-2xl text-gray-500 mb-2"></i>
+                    <p class="font-semibold text-gray-900 dark:text-white">Back to Home</p>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

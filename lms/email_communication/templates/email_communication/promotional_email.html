@@ -1,0 +1,150 @@
+{% extends 'home/base.html' %}
+{% load static %}
+
+{% block title %}Send Promotional Email{% endblock %}
+
+{% block content %}
+<div class="flex-1 overflow-y-auto">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Promotional Email</h1>
+            <p class="mt-2 text-gray-600 dark:text-gray-400">Send promotional material to platform users</p>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="flex gap-2 mb-8 border-b border-gray-200 dark:border-gray-700">
+            <a href="{% url 'promotional_email' %}" class="px-4 py-3 border-b-2 border-primary font-semibold text-primary">
+                <i class="fas fa-rocket mr-2"></i>Send Email
+            </a>
+            <a href="{% url 'promotional_email_history' %}" class="px-4 py-3 border-b-2 border-transparent font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                <i class="fas fa-history mr-2"></i>History
+            </a>
+        </div>
+
+        <!-- Form -->
+        <form method="post" class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8">
+            {% csrf_token %}
+            
+            <!-- Subject -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <i class="fas fa-heading text-primary mr-2"></i>Subject
+                </label>
+                {{ form.subject }}
+                {% if form.subject.errors %}
+                <p class="text-red-500 text-sm mt-1">{{ form.subject.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Message Body -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <i class="fas fa-message text-primary mr-2"></i>Message
+                </label>
+                {{ form.body }}
+                {% if form.body.errors %}
+                <p class="text-red-500 text-sm mt-1">{{ form.body.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Target Audience -->
+            <div class="mb-8">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
+                    <i class="fas fa-users text-primary mr-2"></i>Target Audience
+                </label>
+                <div class="space-y-3">
+                    {% for radio in form.target_audience %}
+                    <label class="flex items-center p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:border-primary hover:bg-gray-50 dark:hover:bg-gray-700 transition" data-audience="{{ radio.data.value }}">
+                        {{ radio.tag }}
+                        <span class="ml-3">
+                            {% if radio.data.value == 'all' %}
+                                <strong class="text-gray-900 dark:text-white">All Users</strong>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">{{ all_users_count }} total users</p>
+                            {% elif radio.data.value == 'students' %}
+                                <strong class="text-gray-900 dark:text-white">Students Only</strong>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">{{ students_count }} enrolled students</p>
+                            {% elif radio.data.value == 'instructors' %}
+                                <strong class="text-gray-900 dark:text-white">Instructors Only</strong>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">{{ instructors_count }} active instructors</p>
+                            {% endif %}
+                        </span>
+                    </label>
+                    {% endfor %}
+                </div>
+                {% if form.target_audience.errors %}
+                <p class="text-red-500 text-sm mt-3">{{ form.target_audience.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Recipient Count Summary -->
+            <div class="bg-blue-50 dark:bg-blue-900 dark:bg-opacity-30 border-l-4 border-blue-500 p-4 mb-6 rounded">
+                <p class="text-sm text-blue-800 dark:text-blue-200" id="recipient-summary">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Select an audience to see recipient count
+                </p>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="flex gap-4">
+                <button type="submit" name="action" value="preview" class="flex-1 px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition">
+                    <i class="fas fa-eye mr-2"></i>Preview & Send
+                </button>
+                <a href="{% url 'home' %}" class="flex-1 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition text-center">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </a>
+            </div>
+        </form>
+
+        <!-- Tips Section -->
+        <div class="bg-green-50 dark:bg-green-900 dark:bg-opacity-20 border-l-4 border-green-500 p-6 rounded-lg">
+            <h3 class="font-semibold text-green-900 dark:text-green-200 mb-3">
+                <i class="fas fa-lightbulb mr-2"></i>Tips for Effective Promotional Emails
+            </h3>
+            <ul class="text-sm text-green-800 dark:text-green-300 space-y-2">
+                <li>• Use a compelling subject line to increase open rates</li>
+                <li>• Keep your message concise and action-oriented</li>
+                <li>• Include a clear call-to-action</li>
+                <li>• Review your message before sending to all users</li>
+                <li>• Consider the target audience when crafting your message</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const audienceOptions = document.querySelectorAll('input[name="target_audience"]');
+    const summaryElement = document.getElementById('recipient-summary');
+    
+    const counts = {
+        'all': {{ all_users_count }},
+        'students': {{ students_count }},
+        'instructors': {{ instructors_count }}
+    };
+
+    function updateSummary() {
+        const selected = document.querySelector('input[name="target_audience"]:checked');
+        if (selected) {
+            const audience = selected.value;
+            const count = counts[audience];
+            const labels = {
+                'all': 'All Users',
+                'students': 'Students',
+                'instructors': 'Instructors'
+            };
+            summaryElement.innerHTML = `
+                <i class="fas fa-check-circle mr-2"></i>
+                This email will be sent to <strong>${count}</strong> ${labels[audience].toLowerCase()}
+            `;
+        }
+    }
+
+    audienceOptions.forEach(option => {
+        option.addEventListener('change', updateSummary);
+    });
+
+    updateSummary();
+});
+</script>
+{% endblock %}

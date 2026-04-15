@@ -1,0 +1,116 @@
+{% extends 'home/base.html' %}
+
+{% block title %}Lesson: {{ lesson.title }} — Kuza Ndoto Academy{% endblock %}
+
+{% block content %}
+<main class="flex-1 overflow-y-auto">
+<div class="p-4 sm:p-6 max-w-5xl mx-auto">
+
+    <nav class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-5">
+        <a href="{% url 'instructor_course_list' %}" class="hover:text-primary"><i class="fas fa-chalkboard-teacher mr-1"></i>Courses</a>
+        <i class="fas fa-chevron-right text-[10px]"></i>
+        <a href="{% url 'instructor_course_detail' lesson.module.course.pk %}" class="hover:text-primary">{{ lesson.module.course.title|truncatewords:3 }}</a>
+        <i class="fas fa-chevron-right text-[10px]"></i>
+        <a href="{% url 'instructor_module_detail' lesson.module.pk %}" class="hover:text-primary">{{ lesson.module.title|truncatewords:3 }}</a>
+        <i class="fas fa-chevron-right text-[10px]"></i>
+        <span class="text-gray-700 dark:text-gray-300 font-medium">{{ lesson.title|truncatewords:3 }}</span>
+    </nav>
+
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-6">
+        <div class="p-5 sm:p-6 border-b border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">{{ lesson.title }}</h1>
+                <div class="prose dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 text-sm mb-4">
+                    {{ lesson.description|safe }}
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap gap-2 flex-shrink-0">
+                <a href="{% url 'update_lesson' lesson.pk %}" class="bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm py-2 px-4 rounded-lg"><i class="fas fa-edit"></i> Edit text & PDF</a>
+                <a href="{% url 'create_video' pk=lesson.pk %}" class="bg-primary hover:bg-primary-dark text-white font-medium text-sm py-2 px-4 rounded-lg"><i class="fas fa-video"></i> Add Video</a>
+                <a href="{% url 'delete_lesson' lesson.pk %}" class="bg-red-500/10 text-red-600 hover:bg-red-600 hover:text-white font-medium text-sm py-2 px-4 rounded-lg"><i class="fas fa-trash"></i> Delete</a>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-0 border-b border-gray-100 dark:border-gray-700">
+            <div class="p-5 border-b md:border-b-0 md:border-r border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                <h3 class="font-bold text-gray-900 dark:text-white mb-3 text-sm uppercase tracking-wider"><i class="fas fa-bullseye text-primary mr-1"></i> Objectives</h3>
+                <ul class="list-disc pl-5 text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                    {% for obj in lesson.objectives.splitlines %}
+                    {% if obj.strip %}<li>{{ obj }}</li>{% endif %}
+                    {% empty %}
+                    <li>No objectives provided.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="p-5 md:col-span-2">
+                <h3 class="font-bold text-gray-900 dark:text-white mb-3 text-sm uppercase tracking-wider"><i class="fas fa-file-alt text-blue-500 mr-1"></i> Content Preview</h3>
+                {% if lesson.image_content %}
+                <div class="mb-4">
+                    <img src="{{ lesson.image_content.url }}" alt="Lesson Image" class="max-h-64 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                </div>
+                {% endif %}
+                <div class="prose dark:prose-invert prose-sm max-w-none text-gray-700 dark:text-gray-300">
+                    {{ lesson.content|safe }}
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <!-- Lesson Media / Attachments section -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <!-- PDF File Section -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+            <h3 class="font-bold text-gray-900 dark:text-white mb-4 text-lg"><i class="fas fa-file-pdf text-red-500 mr-2"></i> Attached PDF</h3>
+            {% if lesson.pdf_file %}
+            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-700 rounded-xl">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-file-pdf text-3xl text-red-500"></i>
+                    <div class="flex flex-col">
+                        <span class="font-medium text-gray-800 dark:text-gray-200">{{ lesson.pdf_file.name|slice:"12:" }}</span>
+                        <a href="{{ lesson.pdf_file.url }}" target="_blank" class="text-xs text-blue-600 hover:underline">View File</a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="p-4 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl text-center">
+                <p class="text-sm text-gray-500">No PDF attached.</p>
+                <a href="{% url 'update_lesson' lesson.pk %}" class="text-primary hover:underline text-xs mt-2 inline-block">Upload one in Settings</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Videos Section -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-gray-900 dark:text-white text-lg"><i class="fas fa-play-circle text-blue-500 mr-2"></i> Videos</h3>
+            </div>
+            
+            {% if lesson.videos.all %}
+            <div class="space-y-3">
+                {% for video in lesson.videos.all %}
+                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-700 rounded-xl">
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <i class="fas fa-video text-gray-400"></i>
+                        <span class="font-medium text-gray-800 dark:text-gray-200 truncate">{{ video.title }}</span>
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                        <a href="{% url 'update_video' video.pk %}" class="text-blue-600 bg-blue-100 dark:bg-blue-900/40 p-2 rounded hover:bg-blue-200" title="Edit"><i class="fas fa-edit"></i></a>
+                        <a href="{% url 'delete_video' video.pk %}" class="text-red-600 bg-red-100 dark:bg-red-900/40 p-2 rounded hover:bg-red-200" title="Delete"><i class="fas fa-trash"></i></a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="p-4 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl text-center">
+                <p class="text-sm text-gray-500">No videos attached.</p>
+                <a href="{% url 'create_video' pk=lesson.pk %}" class="text-primary hover:underline text-xs mt-2 inline-block"><i class="fas fa-plus"></i> Add Video</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+</main>
+{% endblock %}

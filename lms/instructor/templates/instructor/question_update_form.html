@@ -1,0 +1,70 @@
+{% extends 'home/base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Update Question — Kuza Ndoto Academy{% endblock %}
+
+{% block content %}
+<main class="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 pb-12">
+    <div class="p-6 max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-6">Update Question</h1>
+        
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8">
+            <form method="post" class="space-y-8">
+                {% csrf_token %}
+                
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Question Text</h2>
+                    {% for field in form %}
+                    <div>
+                        {% render_field field class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-primary focus:ring-primary transition-colors" %}
+                        {% for error in field.errors %}
+                        <p class="mt-1 text-sm text-red-600 dark:text-red-400"><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <hr class="border-gray-200 dark:border-gray-700">
+
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Answers</h2>
+                    <p class="text-sm text-gray-500 mb-4">Provide possible answers and check the box on the left for the correct one(s).</p>
+                    
+                    {{ answers.management_form }}
+                    <div class="space-y-3">
+                        {% for answer_form in answers %}
+                        <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-700 rounded-xl">
+                            <div>
+                                {% render_field answer_form.is_correct class="h-5 w-5 text-green-600 focus:ring-green-600 border-gray-300 rounded cursor-pointer" title="Mark as correct answer" %}
+                            </div>
+                            <div class="flex-1">
+                                {% render_field answer_form.answer_text class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-primary focus:ring-primary transition-colors text-sm" placeholder="Answer option..." %}
+                            </div>
+                            {% if answer_form.DELETE %}
+                            <div class="flex items-center ml-2 space-x-1 border-l pl-2 dark:border-gray-600">
+                                {% render_field answer_form.DELETE class="h-4 w-4 text-red-600 focus:ring-red-600 border-gray-300 rounded cursor-pointer" title="Delete this answer" %}
+                                <label for="{{ answer_form.DELETE.id_for_label }}" class="text-xs text-red-500 font-medium cursor-pointer">Delete</label>
+                            </div>
+                            {% endif %}
+                            
+                            {% for hidden in answer_form.hidden_fields %}
+                                {{ hidden }}
+                            {% endfor %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="pt-4 flex gap-3">
+                    <button type="submit" class="bg-primary hover:bg-primary-dark text-white font-medium py-2.5 px-6 rounded-lg transition-colors shadow-sm w-full sm:w-auto text-center">
+                        <i class="fas fa-save mr-2"></i> Update Question
+                    </button>
+                    <a href="{% url 'instructor_quiz_detail' object.quiz.pk %}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300 font-medium py-2.5 px-6 rounded-lg transition-colors text-center w-full sm:w-auto">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+{% endblock %}

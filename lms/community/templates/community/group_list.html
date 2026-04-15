@@ -1,0 +1,163 @@
+{% extends 'home/base.html' %}
+{% load static %}
+
+{% block title %}Community Groups{% endblock %}
+
+{% block content %}
+<div class="flex-1 overflow-y-auto">
+    <div class="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <!-- Back Button -->
+        <div class="mb-4">
+            <a href="{% url 'community_hub' %}" class="inline-flex items-center text-primary dark:text-primary-light hover:text-primary-dark dark:hover:text-primary font-semibold text-xs sm:text-sm">
+                <i class="fas fa-chevron-left mr-1 text-sm sm:text-base"></i>Back to Community
+            </a>
+        </div>
+
+        <!-- Header Section -->
+        <div class="mb-6 sm:mb-8">
+            <div class="flex flex-col sm:items-center justify-between mb-4 sm:mb-6">
+                <div>
+                    <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+                        <i class="fas fa-users text-primary mr-1 sm:mr-2 text-lg sm:text-2xl"></i>Community Groups
+                    </h1>
+                    <p class="mt-1 sm:mt-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400">Connect with others, share ideas, and collaborate</p>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                <a href="{% url 'create_group' %}" class="flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm bg-primary text-white rounded-full hover:bg-primary-dark transition font-medium flex items-center justify-center gap-1 sm:gap-2 shadow-md hover:shadow-lg">
+                    <i class="fas fa-plus"></i><span class="hidden sm:inline">Create Group</span><span class="sm:hidden">Create</span>
+                </a>
+                <a href="{% url 'group_discovery' %}" class="flex-1 sm:flex-none px-6 py-3 bg-gradient-to-r from-primary/20 to-primary-dark/20 dark:from-primary/30 dark:to-primary-dark/30 text-primary dark:text-primary-light rounded-full hover:shadow-md transition font-medium flex items-center justify-center gap-2 border border-primary/30">
+                    <i class="fas fa-search"></i>Discover Groups
+                </a>
+                <a href="{% url 'group_invitations' %}" class="flex-1 sm:flex-none px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition font-medium flex items-center justify-center gap-2">
+                    <i class="fas fa-inbox"></i>Invitations
+                </a>
+            </div>
+        </div>
+
+        <!-- Your Groups Section -->
+        {% if joined_groups %}
+        <div class="mb-12">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+                    <i class="fas fa-bookmark text-primary mr-2"></i>Your Groups
+                </h2>
+                <span class="text-sm text-gray-600 dark:text-gray-400">{{ joined_groups|length }} group{{ joined_groups|length|pluralize }}</span>
+            </div>
+            <div class="space-y-3">
+                {% for group in joined_groups %}
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <a href="{% url 'unified_conversation' %}?type=group&group_id={{ group.id }}" class="block p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                        <div class="flex items-center gap-4">
+                            <!-- Group Avatar -->
+                            <div class="w-14 h-14 rounded-lg bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                                {{ group.name|first|upper }}
+                            </div>
+
+                            <!-- Group Info -->
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white truncate">{{ group.name }}</h3>
+                                    {% if group.is_public %}
+                                    <span class="text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 px-2 py-0.5 rounded-full flex-shrink-0">Public</span>
+                                    {% else %}
+                                    <span class="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 px-2 py-0.5 rounded-full flex-shrink-0">Private</span>
+                                    {% endif %}
+                                </div>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 truncate">{{ group.description|truncatewords:15 }}</p>
+                                <div class="flex gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                    <span><i class="fas fa-users mr-1"></i>{{ group.members.count }} members</span>
+                                    <span><i class="fas fa-comments mr-1"></i>{{ group.messages.count }} messages</span>
+                                </div>
+                            </div>
+
+                            <!-- Arrow Indicator -->
+                            <div class="text-gray-400 dark:text-gray-600 flex-shrink-0">
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Available Groups Section -->
+        {% if available_groups %}
+        <div>
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+                    <i class="fas fa-globe text-primary mr-2"></i>Browse Groups
+                </h2>
+                <span class="text-sm text-gray-600 dark:text-gray-400">{{ available_groups|length }} public group{{ available_groups|length|pluralize }}</span>
+            </div>
+            <div class="space-y-3">
+                {% for group in available_groups %}
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition border border-gray-200 dark:border-gray-700 overflow-hidden group">
+                    <div class="p-4">
+                        <div class="flex items-center gap-4">
+                            <!-- Group Avatar -->
+                            <div class="w-14 h-14 rounded-lg bg-gradient-to-br from-primary/70 to-primary-dark/70 flex items-center justify-center text-white font-bold text-lg flex-shrink-0 group-hover:from-primary group-hover:to-primary-dark transition">
+                                {{ group.name|first|upper }}
+                            </div>
+
+                            <!-- Group Info -->
+                            <div class="flex-1 min-w-0">
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white truncate">{{ group.name }}</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 truncate">{{ group.description|truncatewords:15 }}</p>
+                                <div class="flex gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                    <span><i class="fas fa-users mr-1"></i>{{ group.members.count }} members</span>
+                                    <span><i class="fas fa-user-circle mr-1"></i>{{ group.creator.get_full_name|default:group.creator.username }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Action Button -->
+                            <div class="flex-shrink-0">
+                                <form method="POST" action="{% url 'join_group' group_id=group.id %}" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="px-4 py-2 bg-primary text-white rounded-full hover:bg-primary-dark transition font-medium text-sm whitespace-nowrap">
+                                        <i class="fas fa-plus mr-1"></i>Join
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Empty State -->
+        {% if not joined_groups and not available_groups %}
+        <div class="bg-gradient-to-br from-primary/5 to-primary-dark/5 dark:from-gray-800 dark:to-gray-700 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 p-12 text-center">
+            <i class="fas fa-users text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">No Groups Yet</h2>
+            <p class="text-gray-600 dark:text-gray-400 mb-8 max-w-sm mx-auto">
+                Create your own group or discover and join public groups to start connecting with others!
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="{% url 'create_group' %}" class="px-6 py-3 bg-primary text-white rounded-full hover:bg-primary-dark transition font-medium inline-block">
+                    <i class="fas fa-plus-circle mr-2"></i>Create Group
+                </a>
+                <a href="{% url 'group_discovery' %}" class="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition font-medium inline-block">
+                    <i class="fas fa-search mr-2"></i>Discover Groups
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    @media (max-width: 640px) {
+        h1 {
+            font-size: 1.875rem;
+        }
+    }
+</style>
+{% endblock %}

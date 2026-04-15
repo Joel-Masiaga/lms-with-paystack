@@ -1,0 +1,109 @@
+{% extends "home/base.html" %}
+{% load static %}
+{% block title %}eBooks — Kuza Ndoto Academy{% endblock %}
+
+{% block content %}
+<main class="flex-1 pt-4 pb-20 sm:pt-6 sm:pb-6 bg-gray-100 dark:bg-gray-900 overflow-y-auto">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6">
+    <div class="mb-6 flex items-center justify-between">
+      <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">eBooks</h1>
+      {% if user.is_authenticated and user.role == 'instructor' %}
+      <a href="{% url 'create_ebook' %}"
+         class="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white font-semibold py-2.5 px-5 rounded-lg shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800">
+        <i class="fas fa-upload"></i> Upload eBook
+      </a>
+      {% endif %}
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <aside class="col-span-1">
+        <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md border border-gray-100 dark:border-gray-700">
+          
+          <label for="category_select" class="block font-semibold mb-2 text-sm text-gray-900 dark:text-white">Categories</label>
+          <select id="category_select" 
+                  onchange="window.location.href = this.value;"
+                  class="block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 p-2 md:p-3 text-xs md:text-sm text-gray-900 dark:text-white focus:ring-primary focus:border-primary dark:border-primary-light">
+            <option value="{% url 'ebook_list' %}" 
+                    {% if not selected_category %}selected{% endif %}>
+              All ({{ ebooks.count }})
+            </option>
+
+            {% for cat in categories %}
+            <option value="{% url 'ebook_list' %}?category={{ cat.slug }}" 
+                    {% if selected_category and selected_category.id == cat.id %}selected{% endif %}>
+              {{ cat.name }} {% if cat.ebook_count %} ({{ cat.ebook_count }}){% endif %}
+            </option>
+            {% empty %}
+             <option disabled>No categories</option>
+            {% endfor %}
+          </select>
+          </div>
+      </aside>
+
+      <section class="col-span-3">
+        {% if ebooks %}
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {% for ebook in ebooks %}
+              <article class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden flex transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border border-gray-100 dark:border-gray-700 focus:outline-none group">
+                <div class="w-32 flex-shrink-0 bg-gray-50 dark:bg-gray-900 relative">
+                  {% if ebook.cover_image %}
+                    <img src="{{ ebook.cover_image.url }}" alt="{{ ebook.title }}" class="h-32 w-full object-cover">
+                  {% else %}
+                    <img src="{% static 'home/ebook-default-cover.png' %}" alt="{{ ebook.title }}" class="h-32 w-full object-cover">
+                  {% endif %}
+                  {% if user.is_authenticated and user.role == 'instructor' and ebook.uploaded_by == user %}
+                  <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-1 flex-col">
+                    <a href="{% url 'update_ebook' ebook.pk %}"
+                       class="inline-flex items-center gap-1 bg-primary hover:bg-primary-dark text-white py-1.5 px-2.5 rounded transition-colors font-medium text-xs">
+                      <i class="fas fa-edit"></i> Edit
+                    </a>
+                    <a href="{% url 'delete_ebook' ebook.pk %}"
+                       class="inline-flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white py-1.5 px-2.5 rounded transition-colors font-medium text-xs">
+                      <i class="fas fa-trash-alt"></i> Delete
+                    </a>
+                  </div>
+                  {% endif %}
+                </div>
+                <div class="p-4 flex flex-col justify-between flex-1">
+                  <div>
+                    <h4 class="font-bold text-lg tracking-tight text-primary-darker dark:text-primary-light hover:text-primary dark:hover:text-primary-light dark:text-primary-light transition-colors">{{ ebook.title }}</h4>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">
+                      {% if ebook.description %}
+                        {{ ebook.description|striptags|truncatechars:160 }}
+                      {% else %}
+                        No description available.
+                      {% endif %}
+                    </p>
+                    {% if ebook.category %}
+                      <p class="text-xs text-gray-500 mt-2">Category: <span class="font-medium">{{ ebook.category.name }}</span></p>
+                    {% endif %}
+                  </div>
+
+                  <div class="mt-4 flex items-center justify-between">
+                    <div class="text-xs text-gray-500">Published: {{ ebook.created_at|date:"M j, Y" }}</div>
+                    <div class="flex items-center space-x-2">
+                      {% if ebook.slug %}
+                        {% if ebook.published or user.is_authenticated and user.role == 'instructor' and ebook.uploaded_by == user %}
+                        <a href="{% url 'ebook_detail' ebook.slug %}" class="inline-block bg-primary text-white px-3 py-1 rounded hover:bg-primary-dark text-sm">Read</a>
+                        {% else %}
+                        <span class="inline-block bg-gray-400 text-white px-3 py-1 rounded text-sm cursor-not-allowed">Read</span>
+                        {% endif %}
+                      {% else %}
+                      <span class="inline-block bg-gray-400 text-white px-3 py-1 rounded text-sm cursor-not-allowed">No slug</span>
+                      {% endif %}
+                      </div>
+                  </div>
+                </div>
+              </article>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm text-center">
+            <p class="text-gray-600 dark:text-gray-300">No eBooks found.</p>
+          </div>
+        {% endif %}
+      </section>
+    </div>
+  </div>
+</main>
+{% endblock %}

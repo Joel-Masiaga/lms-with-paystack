@@ -1,0 +1,145 @@
+{% extends 'home/base.html' %}
+{% load static %}
+{% load user_display_filters %}
+
+{% block title %}{{ group.name }} - Members{% endblock %}
+
+{% block content %}
+<div class="flex-1 overflow-y-auto">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center gap-3 mb-4">
+                <a href="{% url 'group_detail' group.id %}" class="text-primary hover:text-primary-dark">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+                        <i class="fas fa-users text-primary mr-2"></i>Group Members
+                    </h1>
+                    <p class="text-gray-600 dark:text-gray-400">{{ group.name }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Members List -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Member</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Role</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Joined</th>
+                            {% if is_admin %}
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Actions</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        {% for member in members %}
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                            <!-- Member Info -->
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    {% if member.user.profile.image and member.user.profile.image.url != '/media/default.jpg' %}
+                                    <img src="{{ member.user.profile.image.url }}" alt="{{ member.user|get_display_name }}" class="w-10 h-10 rounded-full object-cover">
+                                    {% else %}
+                                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white font-bold text-sm" title="{{ member.user|get_avatar_label }}">
+                                        {{ member.user|get_avatar_initials }}
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <p class="font-medium text-gray-900 dark:text-white">{{ member.user|get_display_name|default:member.user.username }}</p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ member.user.email }}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            
+                            <!-- Role -->
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium 
+                                    {% if member.role == 'admin' %}
+                                        bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300
+                                    {% else %}
+                                        bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300
+                                    {% endif %}">
+                                    {% if member.role == 'admin' %}
+                                    <i class="fas fa-crown mr-2"></i>Admin
+                                    {% else %}
+                                    <i class="fas fa-user mr-2"></i>Member
+                                    {% endif %}
+                                </span>
+                            </td>
+                            
+                            <!-- Joined Date -->
+                            <td class="px-6 py-4">
+                                <p class="text-sm text-gray-600 dark:text-gray-400">{{ member.joined_at|date:"M d, Y" }}</p>
+                            </td>
+                            
+                            <!-- Actions -->
+                            {% if is_admin %}
+                            <td class="px-6 py-4">
+                                {% if member.user != request.user and member.user != group.creator %}
+                                <button onclick="removeMember({{ member.user.id }}, '{{ member.user|get_display_name|default:member.user.username }}')" 
+                                    class="px-3 py-1 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/40 transition text-sm font-medium">
+                                    <i class="fas fa-trash mr-1"></i>Remove
+                                </button>
+                                {% elif member.user == group.creator %}
+                                <span class="text-sm text-gray-500 dark:text-gray-400">Creator</span>
+                                {% else %}
+                                <span class="text-sm text-gray-500 dark:text-gray-400">You</span>
+                                {% endif %}
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="{% if is_admin %}4{% else %}3{% endif %}" class="px-6 py-8 text-center">
+                                <p class="text-gray-500 dark:text-gray-400">No members in this group yet</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Back Button -->
+        <div class="mt-6">
+            <a href="{% url 'group_detail' group.id %}" class="inline-flex items-center gap-2 px-4 py-2 text-primary hover:bg-primary/10 rounded-lg transition">
+                <i class="fas fa-arrow-left"></i>Back to Group
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if is_admin %}
+<script>
+function removeMember(memberId, memberName) {
+    if (confirm(`Are you sure you want to remove ${memberName} from this group?`)) {
+        fetch(`{% url 'remove_group_member' group.id 0 %}`.replace('0', memberId), {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'Unknown error occurred'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while removing the member');
+        });
+    }
+}
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends 'home/base.html' %}
+{% load static %}
+
+{% block title %}Manage eBooks — Kuza Ndoto Academy{% endblock %}
+
+{% block content %}
+<main class="flex-1 overflow-y-auto">
+<div class="p-4 sm:p-6 max-w-6xl mx-auto">
+
+    {# ── Header ── #}
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+                <i class="fas fa-book text-primary mr-2"></i>Manage eBooks
+            </h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Upload, edit, and delete your eBooks.</p>
+        </div>
+        <a href="{% url 'create_ebook' %}"
+           class="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white font-semibold py-2.5 px-5 rounded-lg shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800">
+            <i class="fas fa-plus"></i> Upload eBook
+        </a>
+    </div>
+
+    {# ── eBooks Grid ── #}
+    {% if ebooks %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {% for ebook in ebooks %}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col">
+            {# Cover Image #}
+            <div class="relative h-40 overflow-hidden bg-gray-50 dark:bg-gray-900">
+                {% if ebook.cover_image %}
+                <img src="{{ ebook.cover_image.url }}" alt="{{ ebook.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                     onerror="this.src='https://placehold.co/400x225/00878d/FFF?text={{ ebook.title.0|upper }}'">
+                {% else %}
+                <div class="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 dark:from-primary/30 dark:to-primary/10 flex items-center justify-center">
+                    <i class="fas fa-book-open text-4xl text-primary/40"></i>
+                </div>
+                {% endif %}
+                {# Action Buttons - Floating #}
+                <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
+                    <a href="{% url 'update_ebook' ebook.pk %}"
+                       class="inline-flex items-center gap-1.5 bg-primary hover:bg-primary-dark text-white py-1.5 px-3 rounded-lg transition-colors font-medium text-xs sm:text-sm">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    <a href="{% url 'delete_ebook' ebook.pk %}"
+                       class="inline-flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white py-1.5 px-3 rounded-lg transition-colors font-medium text-xs sm:text-sm">
+                        <i class="fas fa-trash-alt"></i> Delete
+                    </a>
+                </div>
+            </div>
+
+            {# Content #}
+            <div class="p-4 flex-1 flex flex-col">
+                <h3 class="font-bold text-base tracking-tight text-primary-darker dark:text-primary-light hover:text-primary dark:hover:text-primary-light transition-colors line-clamp-2 mb-2">
+                    {{ ebook.title }}
+                </h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 flex-1 mb-2">
+                    {% if ebook.description %}
+                        {{ ebook.description|striptags|truncatechars:100 }}
+                    {% else %}
+                        No description
+                    {% endif %}
+                </p>
+                <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-200 dark:border-gray-700">
+                    <span>{{ ebook.created_at|date:"M d, Y" }}</span>
+                    {% if ebook.category %}
+                    <span class="text-primary dark:text-primary-light font-medium">{{ ebook.category.name }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-12 text-center">
+        <i class="fas fa-book-open text-5xl text-gray-300 dark:text-gray-600 mb-4"></i>
+        <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">No eBooks yet</h2>
+        <p class="text-gray-500 dark:text-gray-400 text-sm mb-6">
+            Start uploading eBooks to make them available to your students.
+        </p>
+        <a href="{% url 'create_ebook' %}"
+           class="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white font-semibold py-2.5 px-5 rounded-lg transition-colors">
+            <i class="fas fa-plus"></i> Upload Your First eBook
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+</main>
+{% endblock %}

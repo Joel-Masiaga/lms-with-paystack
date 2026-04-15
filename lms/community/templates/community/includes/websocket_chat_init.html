@@ -1,0 +1,404 @@
+<!--
+WebSocket Chat Initialization Script
+Integrates WebSocket client with chat interface and HTMX
+Include this in your chat template
+-->
+
+<style>
+    /* Hide Django toast notifications on chat pages */
+    #toast-stack {
+        display: none !important;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const conversationType = '{{ conversation_type }}';
+    const currentUserId = {{ request.user.id }};
+    const messagesContainer = document.getElementById('messages-container');
+    
+    let chatClient = null;
+    let typingManager = null;
+    let messageManager = null;
+    let fileUploadManager = null;
+    let pendingAttachmentPath = null;  // Track uploaded file path for attaching to model
+    let pendingAttachmentUrl = null;   // Track uploaded file URL for display
+    
+    // Track recent notifications to prevent duplicates
+    const notificationCache = new Map();
+    const NOTIFICATION_DEBOUNCE_MS = 2000;
+    
+    // ============================================
+    // HTMX Configuration
+    // ============================================
+    if (window.htmx) {
+        // Configure HTMX for chat responsiveness
+        htmx.config.timeout = 10000;  // 10 second timeout for requests
+        htmx.config.refreshOnHistoryMiss = true;
+        
+        // Enable HTMX event logging in development
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            htmx.logger = (elt, message, data) => console.debug('[HTMX]', message);
+        }
+    }
+    
+    // Initialize based on conversation type
+    if (conversationType === 'direct') {
+        const otherUserId = '{{ other_user.id }}';
+        initializeDirectChat(otherUserId);
+    } else if (conversationType === 'group') {
+        const groupId = '{{ group.id }}';
+        initializeGroupChat(groupId);
+    }
+    
+    /**
+     * Initialize direct message chat
+     */
+    function initializeDirectChat(otherUserId) {
+        // Create WebSocket client
+        chatClient = new ChatWebSocketClient();
+        messageManager = new MessageManager('messages-container');
+        typingManager = new TypingIndicatorManager(chatClient);
+        fileUploadManager = new FileUploadManager({
+            uploadEndpoint: '/community/upload/attachment/'
+        });
+        
+        // Connect to WebSocket
+        const chatPath = `/ws/chat/direct/${otherUserId}/`;
+        chatClient.connect(
+            chatPath,
+            onChatOpen,
+            onChatClose
+        );
+        
+        // Set up message handlers
+        chatClient.on('chat_message', handleDirectMessage);
+        
+        // Set up typing indicators
+        const typingPath = `/ws/typing/direct/${otherUserId}/`;
+        const typingClient = new ChatWebSocketClient();
+        typingClient.connect(typingPath, null, null);
+        typingClient.on('user_typing', (data) => {
+            typingManager.addTypingUser(data.user_id, data.user_name);
+        });
+        typingClient.on('user_stopped_typing', (data) => {
+            typingManager.removeTypingUser(data.user_id);
+        });
+        
+        // Set up input handlers
+        setupMessageInput(chatClient, typingManager, 'direct', otherUserId);
+    }
+    
+    /**
+     * Initialize group chat
+     */
+    function initializeGroupChat(groupId) {
+        chatClient = new ChatWebSocketClient();
+        messageManager = new MessageManager('messages-container');
+        typingManager = new TypingIndicatorManager(chatClient);
+        fileUploadManager = new FileUploadManager({
+            uploadEndpoint: '/community/upload/group-attachment/'
+        });
+        
+        // Connect to WebSocket
+        const chatPath = `/ws/chat/group/${groupId}/`;
+        chatClient.connect(
+            chatPath,
+            onChatOpen,
+            onChatClose
+        );
+        
+        // Set up message handlers
+        chatClient.on('chat_message', handleGroupMessage);
+        
+        // Temporarily disable user_joined and user_left to debug notification issue
+        // TODO: Re-enable with proper data validation
+        // chatClient.on('user_joined', handleUserJoined);
+        // chatClient.on('user_left', handleUserLeft);
+        
+        // Set up typing indicators
+        const typingPath = `/ws/typing/group/${groupId}/`;
+        const typingClient = new ChatWebSocketClient();
+        typingClient.connect(typingPath, null, null);
+        typingClient.on('user_typing', (data) => {
+            if (data && data.user_id && data.user_id !== currentUserId) {
+                typingManager.addTypingUser(data.user_id, data.user_name || 'Someone');
+            }
+        });
+        typingClient.on('user_stopped_typing', (data) => {
+            if (data && data.user_id) {
+                typingManager.removeTypingUser(data.user_id);
+            }
+        });
+        
+        // Set up input handlers
+        setupMessageInput(chatClient, typingManager, 'group', groupId);
+    }
+    
+    /**
+     * Set up message input handlers
+     */
+    function setupMessageInput(client, typingMgr, type, id) {
+        const messageInput = document.getElementById('id_content');
+        const sendButton = document.getElementById('send-message-btn');
+        const sendFileButton = document.getElementById('send-btn-file');
+        const form = document.getElementById('message-form');
+        
+        if (!messageInput) return;
+        
+        // Send message on text button click
+        if (sendButton) {
+            sendButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                sendMessage(client, messageInput, type, id);
+            });
+        }
+        
+        // Send message on file button click
+        if (sendFileButton) {
+            sendFileButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                const captionInput = document.querySelector('#attachment-preview textarea[name="content"]');
+                // Use caption input if available, otherwise fallback to message Input
+                sendMessage(client, captionInput || messageInput, type, id);
+            });
+        }
+        
+        // Prevent default form submission
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+            });
+        }
+        
+        // Send message on Enter key (text input)
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage(client, messageInput, type, id);
+            }
+        });
+        
+        // Send message on Enter key (caption input)
+        const captionInput = document.querySelector('#attachment-preview textarea[name="content"]');
+        if (captionInput) {
+            captionInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage(client, captionInput, type, id);
+                }
+            });
+        }
+        
+        // Track typing
+        messageInput.addEventListener('input', () => {
+            if (messageInput.value.trim().length > 0) {
+                typingMgr.startTyping();
+            }
+        });
+        
+        // File upload handler
+        const fileInput = document.getElementById('id_attachment');
+        if (fileInput) {
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFileUpload(e.target.files[0], client, type, id);
+                    e.target.value = '';  // Clear input
+                }
+            });
+        }
+    }
+    
+    /**
+     * Send message via WebSocket
+     */
+    function sendMessage(client, input, type, id) {
+        const content = input ? input.value.trim() : '';
+        if (!content && !pendingAttachmentPath) return;
+        
+        // Send via WebSocket
+        if (client.isConnected()) {
+            const messageData = {
+                message: content,
+            };
+            
+            // Include attachment path if present
+            if (pendingAttachmentPath) {
+                messageData.attachment_path = pendingAttachmentPath;
+                messageData.attachment_url = pendingAttachmentUrl;  // Also send URL for display
+                console.log('Sending message with attachment:', {path: pendingAttachmentPath, url: pendingAttachmentUrl});
+            } else {
+                console.log('Sending message without attachment:', content);
+            }
+            
+            const sent = client.send('chat_message', messageData);
+            
+            if (sent) {
+                if (input) input.value = '';
+                const hadAttachment = !!pendingAttachmentPath;
+                pendingAttachmentPath = null;   // Clear attachment after sending
+                pendingAttachmentUrl = null;    // Clear URL after sending
+                
+                if (hadAttachment && typeof clearAttachment === 'function') {
+                    clearAttachment();
+                } else if (input) {
+                    input.focus();
+                }
+            }
+        } else {
+            alert('Connection lost. Please refresh the page.');
+        }
+    }
+    
+    /**
+     * Handle file upload
+     */
+    function handleFileUpload(file, client, type, id) {
+        if (!fileUploadManager) return;
+        
+        const sendBtnFile = document.getElementById('send-btn-file');
+        if (sendBtnFile) {
+            sendBtnFile.disabled = true;
+            sendBtnFile.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span class="hidden sm:inline">Uploading...</span>';
+        }
+        
+        fileUploadManager.uploadFile(
+            file,
+            (data) => {
+                // File uploaded successfully - store path and URL
+                if (data.file_path && data.file_url) {
+                    pendingAttachmentPath = data.file_path;
+                    pendingAttachmentUrl = data.file_url;
+                    console.log('File uploaded, ready to send:', data.file_path);
+                    
+                    if (sendBtnFile) {
+                        sendBtnFile.disabled = false;
+                        sendBtnFile.innerHTML = '<i class="fas fa-paper-plane"></i><span class="hidden sm:inline">Send</span>';
+                    }
+                    
+                    // Optional: Auto-send message with just the file if no text
+                    const captionInput = document.querySelector('#attachment-preview textarea[name="content"]');
+                    if (captionInput) {
+                        captionInput.focus();
+                    }
+                }
+            },
+            (error) => {
+                alert('Upload failed: ' + error);
+                pendingAttachmentPath = null;
+                pendingAttachmentUrl = null;
+                if (sendBtnFile) {
+                    sendBtnFile.disabled = false;
+                    sendBtnFile.innerHTML = '<i class="fas fa-paper-plane"></i><span class="hidden sm:inline">Send</span>';
+                }
+            }
+        );
+    }
+    
+    /**
+     * Handle incoming direct message
+     */
+    function handleDirectMessage(data) {
+        // Validate message data
+        if (!data || !data.message_id || !data.sender_name) {
+            console.warn('Invalid message data received:', data);
+            return;
+        }
+        console.log('Received DM:', data);
+        messageManager.addMessage(
+            data,
+            data.sender_id,
+            currentUserId
+        );
+    }
+    
+    /**
+     * Handle incoming group message
+     */
+    function handleGroupMessage(data) {
+        // Validate message data
+        if (!data || !data.message_id || !data.sender_name) {
+            console.warn('Invalid message data received:', data);
+            return;
+        }
+        console.log('Received group message:', data);
+        messageManager.addMessage(
+            data,
+            data.sender_id,
+            currentUserId
+        );
+    }
+    
+    /**
+     * Handle user joined group
+     */
+    function handleUserJoined(data) {
+        // Don't show notification for the current user or if data is missing
+        if (!data.user_id || !data.user_name || data.user_id === currentUserId) {
+            return;
+        }
+        console.log(data.user_name + ' joined the group');
+        showNotification(`${data.user_name} joined`, 'info');
+    }
+    
+    /**
+     * Handle user left group
+     */
+    function handleUserLeft(data) {
+        // Don't show notification for the current user or if data is missing
+        if (!data.user_id || !data.user_name || data.user_id === currentUserId) {
+            return;
+        }
+        console.log(data.user_name + ' left the group');
+        showNotification(`${data.user_name} left`, 'info');
+    }
+    
+    /**
+     * Chat connection opened
+     */
+    function onChatOpen() {
+        console.log('Chat connection established');
+        const connectionStatus = document.getElementById('connection-status');
+        if (connectionStatus) {
+            connectionStatus.textContent = '● Online';
+            connectionStatus.className = 'text-green-500';
+        }
+    }
+    
+    /**
+     * Chat connection closed
+     */
+    function onChatClose() {
+        console.log('Chat connection closed');
+        const connectionStatus = document.getElementById('connection-status');
+        if (connectionStatus) {
+            connectionStatus.textContent = '● Offline';
+            connectionStatus.className = 'text-red-500';
+        }
+    }
+    
+    /**
+     * Show notification with debouncing and validation
+     * DISABLED - We don't want any toast notifications on chat pages
+     */
+    function showNotification(message, type = 'info') {
+        // Toast notifications are completely disabled on chat pages
+        return;
+    }
+    
+    // ============================================
+    // DISABLE ALL TOAST NOTIFICATIONS ON CHAT PAGE
+    // ============================================
+    // Ensure toasts are hidden on chat pages (hidden via CSS above)
+    function ensureNoNotifications() {
+        const toastStack = document.getElementById('toast-stack');
+        if (toastStack) {
+            toastStack.style.display = 'none';
+            // Remove all toast messages
+            toastStack.innerHTML = '';
+        }
+    }
+    
+    ensureNoNotifications();
+});
+</script>

@@ -1,0 +1,125 @@
+{% extends 'home/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if form.instance.pk %}Edit eBook{% else %}Upload eBook{% endif %} — Kuza Ndoto Academy{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-input {
+        width: 100%;
+        padding: 10px 14px;
+        border-radius: 8px;
+        border: 1px solid #d1d5db;
+        background: #f9fafb;
+        color: #111827;
+        font-size: 0.875rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .dark .form-input {
+        background: #374151;
+        border-color: #4b5563;
+        color: #f3f4f6;
+    }
+    .form-input:focus {
+        outline: none;
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 3px rgba(0,135,141,0.15);
+    }
+    .errorlist {
+        color: #ef4444;
+        font-size: 0.75rem;
+        margin-top: 4px;
+        list-style: none;
+        padding: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="flex-1 overflow-y-auto">
+<div class="p-4 sm:p-6 max-w-2xl mx-auto">
+
+    {# Breadcrumb #}
+    <nav class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-5">
+        <a href="{% url 'instructor_ebook_list' %}" class="hover:text-primary transition-colors">
+            <i class="fas fa-book mr-1"></i>Manage eBooks
+        </a>
+        <i class="fas fa-chevron-right text-[10px]"></i>
+        <span class="text-gray-700 dark:text-gray-300 font-medium">{% if form.instance.pk %}Edit{% else %}Upload{% endif %} eBook</span>
+    </nav>
+
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        {# Header #}
+        <div class="px-5 sm:px-6 py-5 border-b border-gray-100 dark:border-gray-700">
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <i class="{% if form.instance.pk %}fas fa-edit{% else %}fas fa-cloud-upload-alt{% endif %} text-primary"></i>
+                {% if form.instance.pk %}Edit eBook{% else %}Upload New eBook{% endif %}
+            </h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                {% if form.instance.pk %}Update the eBook details below.{% else %}Add all required information to upload your eBook.{% endif %}
+            </p>
+        </div>
+
+        {# Form #}
+        <form method="POST" enctype="multipart/form-data" class="p-5 sm:p-6 space-y-5">
+            {% csrf_token %}
+
+            {% for field in form %}
+            <div>
+                <label for="{{ field.id_for_label }}" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                    {{ field.label }}
+                    {% if field.field.required %}<span class="text-red-500">*</span>{% endif %}
+                </label>
+
+                {% if field.name == 'cover_image' %}
+                <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg px-4 py-6 text-center hover:border-primary dark:hover:border-primary-light transition-colors">
+                    <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 dark:text-gray-500 mb-2"></i>
+                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ field.label }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">PNG, JPG up to 5MB</p>
+                    {{ field }}
+                </div>
+                {% elif field.name == 'file' %}
+                <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg px-4 py-6 text-center hover:border-primary dark:hover:border-primary-light transition-colors">
+                    <i class="fas fa-file-pdf text-3xl text-red-400 mb-2"></i>
+                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ field.label }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">PDF file up to 50MB</p>
+                    {{ field }}
+                </div>
+                {% elif field.name == 'slug' %}
+                <div>
+                    {{ field }}
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">URL-friendly identifier (e.g., my-awesome-ebook). Leave blank to auto-generate from title.</p>
+                </div>
+                {% else %}
+                <div class="form-input">
+                    {{ field }}
+                </div>
+                {% endif %}
+
+                {% if field.errors %}
+                <ul class="errorlist">
+                    {% for error in field.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            {# Actions #}
+            <div class="flex gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <a href="{% url 'instructor_ebook_list' %}"
+                   class="inline-flex justify-center items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium">
+                    <i class="fas fa-times-circle"></i> Cancel
+                </a>
+                <button type="submit"
+                        class="inline-flex justify-center items-center gap-2 px-5 py-2.5 rounded-lg bg-primary hover:bg-primary-dark text-white font-semibold transition-colors">
+                    <i class="fas fa-save"></i>
+                    {% if form.instance.pk %}Update eBook{% else %}Upload eBook{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+</main>
+{% endblock %}
