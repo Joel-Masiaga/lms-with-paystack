@@ -36,6 +36,9 @@ from .views import (InstructorView,
                     InstructorEbookCreateView,
                     InstructorEbookUpdateView,
                     InstructorEbookDeleteView,
+                    InstructorAdditionalMaterialCreateView,
+                    InstructorAdditionalMaterialUpdateView,
+                    InstructorAdditionalMaterialDeleteView,
                     )
 
 urlpatterns = [
@@ -85,4 +88,9 @@ urlpatterns = [
     path('lesson/<int:pk>/create-video/', InstructorVideoCreateView.as_view(), name='create_video'),
     path('video/<int:pk>/update/', InstructorVideoUpdateView.as_view(), name='update_video'),
     path('video/<int:pk>/delete/', InstructorVideoDeleteView.as_view(), name='delete_video'),
+
+    # Additional Material url paths
+    path('lesson/<int:pk>/create-material/', InstructorAdditionalMaterialCreateView.as_view(), name='create_material'),
+    path('material/<int:pk>/update/', InstructorAdditionalMaterialUpdateView.as_view(), name='update_material'),
+    path('material/<int:pk>/delete/', InstructorAdditionalMaterialDeleteView.as_view(), name='delete_material'),
 ]

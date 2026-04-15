@@ -1,6 +1,7 @@
 from django import forms
+from django.forms import inlineformset_factory
 from tinymce.widgets import TinyMCE
-from courses.models import Course, Module, Lesson, Note, Video
+from courses.models import Course, Module, Lesson, Note, Video, AdditionalMaterial
 
 class CourseForm(forms.ModelForm):
     description = forms.CharField(widget=TinyMCE())
@@ -24,7 +25,7 @@ class LessonForm(forms.ModelForm):
 
     class Meta:
         model = Lesson
-        fields = ['module', 'title', 'description', 'objectives', 'image_content', 'content']
+        fields = ['module', 'title', 'description', 'objectives', 'image_content', 'content', 'pdf_file']
 
 class NoteForm(forms.ModelForm):
     content = forms.CharField(
@@ -44,3 +45,25 @@ class VideoForm(forms.ModelForm):
     class Meta:
         model = Video
         fields = ['title', 'video_url']
+
+class AdditionalMaterialForm(forms.ModelForm):
+    class Meta:
+        model = AdditionalMaterial
+        fields = ['title', 'material_url']
+
+# Inline formsets — used in LessonCreate/Update views for inline management
+VideoInlineFormSet = inlineformset_factory(
+    Lesson,
+    Video,
+    fields=['title', 'video_url'],
+    extra=1,
+    can_delete=True,
+)
+
+AdditionalMaterialInlineFormSet = inlineformset_factory(
+    Lesson,
+    AdditionalMaterial,
+    fields=['title', 'material_url'],
+    extra=1,
+    can_delete=True,
+)

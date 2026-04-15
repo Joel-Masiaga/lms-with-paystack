@@ -10,10 +10,10 @@ from django.views.generic import (TemplateView,
                                   DeleteView, 
                                   DetailView,
                                   View)
-from courses.models import Course, Module, Lesson, Video, Ebook
+from courses.models import Course, Module, Lesson, Video, AdditionalMaterial, Ebook
 from quiz.models import Quiz, Question, Answer
 from quiz.forms import QuizForm, QuestionForm, AnswerFormSet
-from courses.forms import VideoForm
+from courses.forms import VideoForm, AdditionalMaterialForm, VideoInlineFormSet, AdditionalMaterialInlineFormSet
 from django.db import models
 
 
@@ -271,16 +271,37 @@ class InstructorLessonListView(LoginRequiredMixin, UserPassesTestMixin, ListView
 
 class InstructorLessonCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Lesson
-    fields = [ 'module', 'title', 'description', 'objectives', 'image_content', 'content', 'pdf_file']
+    fields = ['module', 'title', 'description', 'objectives', 'image_content', 'content', 'pdf_file']
     template_name = "instructor/lesson_form.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context['video_formset'] = VideoInlineFormSet(self.request.POST, prefix='videos')
+            context['material_formset'] = AdditionalMaterialInlineFormSet(self.request.POST, prefix='materials')
+        else:
+            context['video_formset'] = VideoInlineFormSet(prefix='videos')
+            context['material_formset'] = AdditionalMaterialInlineFormSet(prefix='materials')
+        return context
 
     def form_valid(self, form):
         selected_module = form.cleaned_data['module']
         if selected_module.course.created_by != self.request.user:
             form.add_error('module', "You can only create lessons for modules in courses you own.")
             return self.form_invalid(form)
-        return super().form_valid(form)
-    
+        context = self.get_context_data()
+        video_formset = context['video_formset']
+        material_formset = context['material_formset']
+        if video_formset.is_valid() and material_formset.is_valid():
+            self.object = form.save()
+            video_formset.instance = self.object
+            video_formset.save()
+            material_formset.instance = self.object
+            material_formset.save()
+            return HttpResponseRedirect(self.get_success_url())
+        else:
+            return self.render_to_response(self.get_context_data(form=form))
+
     def test_func(self):
         module_id = self.kwargs.get('pk')
         module = get_object_or_404(Module, id=module_id)
@@ -301,20 +322,41 @@ class InstructorLessonDetailView(LoginRequiredMixin, UserPassesTestMixin, Detail
     
 class InstructorLessonUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Lesson
-    fields = [ 'module', 'title', 'description', 'objectives', 'image_content', 'content', 'pdf_file']
+    fields = ['module', 'title', 'description', 'objectives', 'image_content', 'content', 'pdf_file']
     template_name = "instructor/lesson_update_form.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context['video_formset'] = VideoInlineFormSet(self.request.POST, instance=self.object, prefix='videos')
+            context['material_formset'] = AdditionalMaterialInlineFormSet(self.request.POST, instance=self.object, prefix='materials')
+        else:
+            context['video_formset'] = VideoInlineFormSet(instance=self.object, prefix='videos')
+            context['material_formset'] = AdditionalMaterialInlineFormSet(instance=self.object, prefix='materials')
+        return context
 
     def form_valid(self, form):
         selected_module = form.cleaned_data['module']
         if selected_module.course.created_by != self.request.user:
             form.add_error('module', "You can only update lessons for modules in courses you own.")
             return self.form_invalid(form)
-        return super().form_valid(form)
-    
+        context = self.get_context_data()
+        video_formset = context['video_formset']
+        material_formset = context['material_formset']
+        if video_formset.is_valid() and material_formset.is_valid():
+            self.object = form.save()
+            video_formset.instance = self.object
+            video_formset.save()
+            material_formset.instance = self.object
+            material_formset.save()
+            return HttpResponseRedirect(self.get_success_url())
+        else:
+            return self.render_to_response(self.get_context_data(form=form))
+
     def test_func(self):
         lesson = self.get_object()
         return lesson.module.course.created_by == self.request.user
-    
+
     def get_success_url(self):
         return reverse('instructor_lesson_detail', kwargs={'pk': self.object.pk})
     
@@ -543,6 +585,52 @@ class InstructorVideoDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteV
     def test_func(self):
         video = self.get_object()
         return video.lesson.module.course.created_by == self.request.user
+
+    def get_success_url(self):
+        return reverse('instructor_lesson_detail', kwargs={'pk': self.object.lesson.pk})
+
+
+# Additional Material Management Views
+class InstructorAdditionalMaterialCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    model = AdditionalMaterial
+    form_class = AdditionalMaterialForm
+    template_name = "instructor/material_form.html"
+
+    def form_valid(self, form):
+        lesson_id = self.kwargs.get('pk')
+        lesson = get_object_or_404(Lesson, pk=lesson_id)
+        form.instance.lesson = lesson
+        return super().form_valid(form)
+
+    def test_func(self):
+        lesson_id = self.kwargs.get('pk')
+        lesson = get_object_or_404(Lesson, pk=lesson_id)
+        return lesson.module.course.created_by == self.request.user
+
+    def get_success_url(self):
+        return reverse('instructor_lesson_detail', kwargs={'pk': self.kwargs.get('pk')})
+
+
+class InstructorAdditionalMaterialUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = AdditionalMaterial
+    form_class = AdditionalMaterialForm
+    template_name = "instructor/material_form.html"
+
+    def test_func(self):
+        material = self.get_object()
+        return material.lesson.module.course.created_by == self.request.user
+
+    def get_success_url(self):
+        return reverse('instructor_lesson_detail', kwargs={'pk': self.object.lesson.pk})
+
+
+class InstructorAdditionalMaterialDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = AdditionalMaterial
+    template_name = "instructor/material_confirm_delete.html"
+
+    def test_func(self):
+        material = self.get_object()
+        return material.lesson.module.course.created_by == self.request.user
 
     def get_success_url(self):
         return reverse('instructor_lesson_detail', kwargs={'pk': self.object.lesson.pk})

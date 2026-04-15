@@ -105,7 +105,36 @@
             {% else %}
             <div class="p-4 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl text-center">
                 <p class="text-sm text-gray-500">No videos attached.</p>
-                <a href="{% url 'create_video' pk=lesson.pk %}" class="text-primary hover:underline text-xs mt-2 inline-block"><i class="fas fa-plus"></i> Add Video</a>
+                <a href="{% url 'update_lesson' lesson.pk %}" class="text-primary hover:underline text-xs mt-2 inline-block"><i class="fas fa-plus"></i> Add Video</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Additional Materials Section -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-gray-900 dark:text-white text-lg"><i class="fas fa-link text-green-500 mr-2"></i> Additional Materials</h3>
+            </div>
+            
+            {% if lesson.additional_materials.all %}
+            <div class="space-y-3">
+                {% for material in lesson.additional_materials.all %}
+                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-700 rounded-xl">
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <i class="fas fa-external-link-alt text-gray-400"></i>
+                        <a href="{{ material.material_url }}" target="_blank" class="font-medium text-gray-800 dark:text-gray-200 truncate hover:text-primary">{{ material.title }}</a>
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                        <a href="{% url 'update_material' material.pk %}" class="text-blue-600 bg-blue-100 dark:bg-blue-900/40 p-2 rounded hover:bg-blue-200" title="Edit"><i class="fas fa-edit"></i></a>
+                        <a href="{% url 'delete_material' material.pk %}" class="text-red-600 bg-red-100 dark:bg-red-900/40 p-2 rounded hover:bg-red-200" title="Delete"><i class="fas fa-trash"></i></a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="p-4 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl text-center">
+                <p class="text-sm text-gray-500">No additional materials.</p>
+                <a href="{% url 'update_lesson' lesson.pk %}" class="text-primary hover:underline text-xs mt-2 inline-block"><i class="fas fa-plus"></i> Add Material</a>
             </div>
             {% endif %}
         </div>
@@ -114,3 +143,4 @@
 </div>
 </main>
 {% endblock %}
+
