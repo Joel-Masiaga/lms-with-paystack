@@ -453,4 +453,4 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Base URL for building absolute links in emails (set this in Render environment variables)
 # Example: https://lms-with-paystack.onrender.com  or  https://kuzandotoacademy.com
-SITE_URL = os.getenv('SITE_URL', '')
+SITE_URL='https://www.kuzandotoacademy.com'
