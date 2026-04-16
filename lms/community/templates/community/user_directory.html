@@ -1,133 +1,203 @@
-{% extends 'home/base.html' %}
-{% load static %}
-{% load user_display_filters %}
-
-{% block title %}Discover Users & Connect{% endblock %}
+{% block extra_css %}
+<style>
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in-up {
+        animation: fadeInUp 0.5s ease-out forwards;
+        opacity: 0;
+    }
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    .dark .glass-card {
+        background: rgba(31, 41, 55, 0.7);
+        border: 1px solid rgba(75, 85, 99, 0.3);
+    }
+    .user-card {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .user-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
-    <div class="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
-        <!-- Back Button -->
-        <div class="mb-4">
-            <a href="{% url 'community_hub' %}" class="inline-flex items-center text-primary dark:text-primary-light hover:text-primary-dark dark:hover:text-primary font-semibold text-xs sm:text-sm">
-                <i class="fas fa-chevron-left mr-1 text-sm sm:text-base"></i>Back to Community
-            </a>
+<div class="flex-1 overflow-y-auto bg-[#f8fafc] dark:bg-[#0f172a] transition-colors duration-500">
+    <!-- Hero Background (Subtle) -->
+    <div class="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-primary/10 to-transparent pointer-events-none"></div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <!-- Breadcrumbs & Actions -->
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-8 animate-fade-in-up" style="animation-delay: 0.1s">
+            <nav class="flex items-center space-x-2 text-sm">
+                <a href="{% url 'community_hub' %}" class="flex items-center text-primary hover:text-primary-dark transition-colors group">
+                    <span class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-2 group-hover:bg-primary group-hover:text-white transition-all">
+                        <i class="fas fa-arrow-left"></i>
+                    </span>
+                    <span class="font-semibold">Hub</span>
+                </a>
+                <span class="text-gray-400">/</span>
+                <span class="text-gray-500 font-medium">Directory</span>
+            </nav>
+            
+            <div class="flex gap-2">
+                <span class="inline-flex items-center px-4 py-1.5 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm text-xs font-bold text-gray-700 dark:text-gray-300">
+                    <span class="w-2 h-2 rounded-full bg-green-500 mr-2 pulse"></span>
+                    {{ users.count }} Members Found
+                </span>
+            </div>
         </div>
 
         <!-- Header -->
-        <div class="mb-6 sm:mb-8">
-            <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">
-                <i class="fas fa-users text-primary mr-1 sm:mr-2 text-lg sm:text-2xl"></i>Discover & Connect
+        <div class="mb-10 animate-fade-in-up" style="animation-delay: 0.2s">
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">
+                Discover <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-600">Communities</span>
             </h1>
-            <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Find and connect with other {{ user_role }}s on Kuza Ndoto Academy</p>
+            <p class="max-w-2xl text-base sm:text-lg text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                Connect with mentors, collaborators, and friends. The academy is better when we're together.
+            </p>
         </div>
 
-        <!-- Search & Filters -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-3 sm:p-6 mb-6 sm:mb-8">
-            <form method="GET" class="space-y-4">
-                <div class="grid gap-4 md:grid-cols-3">
+        <!-- Glassmorphic Search & Filters -->
+        <div class="glass-card rounded-[2rem] shadow-xl p-6 sm:p-8 mb-12 animate-fade-in-up relative overflow-hidden" style="animation-delay: 0.3s">
+            <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl"></div>
+            
+            <form method="GET" class="relative space-y-6">
+                <div class="grid gap-6 md:grid-cols-4">
                     <!-- Search Input -->
                     <div class="md:col-span-2">
-                        <label for="q" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            <i class="fas fa-search mr-2"></i>Search Users
+                        <label for="q" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-3 ml-1 uppercase tracking-wider">
+                            Search Members
                         </label>
-                        <input type="search" name="q" id="q" value="{{ search_query }}" placeholder="Search by name or email..." class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                        <div class="relative">
+                            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="search" name="q" id="q" value="{{ search_query }}" 
+                                placeholder="Start typing a name or email..." 
+                                class="w-full pl-11 pr-4 py-4 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-2xl dark:text-white focus:outline-none focus:ring-4 focus:ring-primary/20 transition-all text-base ring-offset-2 dark:ring-offset-slate-800">
+                        </div>
                     </div>
                     
                     <!-- Role Filter -->
-                    <div>
-                        <label for="role" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            <i class="fas fa-filter mr-2"></i>Filter by Role
+                    <div class="md:col-span-1">
+                        <label for="role" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-3 ml-1 uppercase tracking-wider">
+                            Role
                         </label>
-                        <select name="role" id="role" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
-                            <option value="">All Roles</option>
-                            <option value="student" {% if role_filter == 'student' %}selected{% endif %}>Students</option>
-                            <option value="instructor" {% if role_filter == 'instructor' %}selected{% endif %}>Instructors</option>
-                        </select>
+                        <div class="relative">
+                            <i class="fas fa-filter absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <select name="role" id="role" 
+                                class="w-full pl-11 pr-10 py-4 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-2xl dark:text-white focus:outline-none focus:ring-4 focus:ring-primary/20 transition-all appearance-none text-base">
+                                <option value="">Everyone</option>
+                                <option value="student" {% if role_filter == 'student' %}selected{% endif %}>Students Only</option>
+                                <option value="instructor" {% if role_filter == 'instructor' %}selected{% endif %}>Instructors Only</option>
+                            </select>
+                            <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
+                        </div>
+                    </div>
+
+                    <!-- Search Button -->
+                    <div class="md:col-span-1 flex items-end">
+                        <button type="submit" class="w-full py-4 bg-gradient-to-r from-primary to-primary-dark text-white rounded-2xl hover:shadow-lg hover:shadow-primary/30 transition-all active:scale-95 font-bold uppercase tracking-widest text-sm flex items-center justify-center gap-2">
+                            <i class="fas fa-sparkles"></i> Filter Results
+                        </button>
                     </div>
                 </div>
                 
-                <div class="flex gap-2">
-                    <button type="submit" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition font-medium">
-                        <i class="fas fa-search mr-2"></i>Search
-                    </button>
-                    <a href="{% url 'user_directory' %}" class="px-6 py-2 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition font-medium">
-                        <i class="fas fa-redo mr-2"></i>Reset
+                {% if search_query or role_filter %}
+                <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <p class="text-sm text-slate-500 italic">Showing filtered results for your search.</p>
+                    <a href="{% url 'user_directory' %}" class="text-sm font-bold text-slate-400 hover:text-primary transition-colors flex items-center gap-1">
+                        <i class="fas fa-undo"></i> Reset All Filters
                     </a>
                 </div>
+                {% endif %}
             </form>
         </div>
 
         <!-- Users Grid -->
         {% if users %}
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 pb-20">
             {% for user in users %}
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition overflow-hidden group">
-                <!-- User Card Header (with gradient background) -->
-                <div class="h-24 bg-gradient-to-r from-primary to-primary-dark relative"></div>
+            <div class="user-card animate-fade-in-up bg-white dark:bg-slate-800 rounded-[2.5rem] shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden group border border-slate-100 dark:border-slate-700/50" 
+                 style="animation-delay: {{ forloop.counter|add:3|mul:0.1 }}s">
                 
-                <!-- Avatar (overlapping header) -->
-                <div class="px-4 pb-4">
-                    <div class="flex flex-col items-center -mt-16 mb-3">
-                        {% if user.profile.image and user.profile.image.url != '/media/default.jpg' %}
-                        <img src="{{ user.profile.image.url }}" alt="{{ user.get_full_name }}" class="w-20 h-20 rounded-full object-cover border-4 border-white dark:border-gray-800 shadow-md">
-                        {% else %}
-                        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white font-bold text-2xl border-4 border-white dark:border-gray-800 shadow-md">
-                            {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                <!-- Card Header -->
+                <div class="h-32 bg-gradient-to-br from-primary via-primary-dark to-slate-900 dark:to-slate-950 relative overflow-hidden">
+                    <div class="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.8),transparent)]"></div>
+                    <!-- Role Badge -->
+                    <div class="absolute top-4 right-4">
+                        <span class="px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-[10px] uppercase font-black tracking-widest text-white border border-white/20">
+                            {{ user.role }}
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Profile Area -->
+                <div class="relative px-6 pb-8">
+                    <!-- Avatar -->
+                    <div class="flex flex-col items-center -mt-16 mb-4">
+                        <div class="relative inline-block">
+                            {% if user.profile.image and user.profile.image.url != '/media/default.jpg' %}
+                            <img src="{{ user.profile.image.url }}" alt="{{ user.get_full_name }}" 
+                                 class="w-28 h-28 rounded-3xl object-cover border-8 border-white dark:border-slate-800 shadow-xl group-hover:scale-105 transition-transform duration-500">
+                            {% else %}
+                            <div class="w-28 h-28 rounded-3xl bg-gradient-to-br from-slate-100 to-slate-300 dark:from-slate-700 dark:to-slate-900 flex items-center justify-center text-slate-500 dark:text-slate-400 font-black text-3xl border-8 border-white dark:border-slate-800 shadow-xl group-hover:scale-105 transition-transform duration-500">
+                                {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                            </div>
+                            {% endif %}
+                            <!-- Status Indicator -->
+                            <div class="absolute bottom-2 right-2 w-6 h-6 bg-green-500 border-4 border-white dark:border-slate-800 rounded-full shadow-lg"></div>
                         </div>
-                        {% endif %}
                     </div>
 
                     <!-- User Info -->
-                    <div class="text-center mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    <div class="text-center mb-6">
+                        <h3 class="text-xl font-black text-slate-900 dark:text-white mb-1 group-hover:text-primary transition-colors">
                             {{ user|get_display_name }}
                         </h3>
-                        <p class="text-sm px-2 py-1 rounded-full text-primary bg-primary/10 inline-block mt-2">
-                            {% if user.role == 'instructor' %}
-                            <i class="fas fa-chalkboard-teacher mr-1"></i>Instructor
-                            {% else %}
-                            <i class="fas fa-student mr-1"></i>Student
-                            {% endif %}
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-tighter">
+                            {{ user.email|truncatechars:25 }}
                         </p>
                     </div>
 
-                    <!-- User Stats (if enrolled in courses) -->
-                    <div class="flex justify-around text-center py-3 border-t border-b border-gray-200 dark:border-gray-700 mb-4">
-                        <div>
-                            <p class="text-2xl font-bold text-primary">{{ user.enrollments.count|default:0 }}</p>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">Courses</p>
+                    <!-- Stats Row -->
+                    <div class="flex items-center justify-between px-2 mb-8 gap-1">
+                        <div class="flex-1 text-center">
+                            <p class="text-lg font-black text-slate-800 dark:text-white leading-none mb-1">
+                                {{ user.enrollments.count|default:0 }}
+                            </p>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Courses</p>
                         </div>
-                        {% if user.role == 'instructor' %}
-                        <div>
-                            <p class="text-2xl font-bold text-primary">0</p>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">Teaching</p>
+                        <div class="w-px h-6 bg-slate-100 dark:bg-slate-700"></div>
+                        <div class="flex-1 text-center">
+                            <p class="text-lg font-black text-primary leading-none mb-1">
+                                {% if user.role == 'instructor' %}0{% else %}{{ user.profile.points|default:0 }}{% endif %}
+                            </p>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                                {% if user.role == 'instructor' %}Teaching{% else %}Points{% endif %}
+                            </p>
                         </div>
-                        {% else %}
-                        <div>
-                            <p class="text-2xl font-bold text-primary">{{ user.profile.points|default:0 }}</p>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">Points</p>
-                        </div>
-                        {% endif %}
                     </div>
 
-                    <!-- Action Buttons -->
-                    <div class="flex flex-col sm:flex-row gap-2">
-                        {% if user.id in chatting_with_ids %}
-                        <!-- Already chatting -->
-                        <a href="{% url 'unified_conversation' %}?type=direct&user_id={{ user.id }}" class="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition text-center font-medium text-sm">
-                            <i class="fas fa-comments mr-1"></i>Open Chat
+                    <!-- Actions -->
+                    <div class="space-y-3">
+                        <a href="{% url 'unified_conversation' %}?type=direct&user_id={{ user.id }}" 
+                           class="flex items-center justify-center w-full py-3.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black uppercase text-[11px] tracking-widest hover:bg-primary dark:hover:bg-primary dark:hover:text-white hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-md">
+                            {% if user.id in chatting_with_ids %}
+                            <i class="fas fa-comment-dots mr-2"></i> Open Message
+                            {% else %}
+                            <i class="fas fa-paper-plane mr-2"></i> Send Request
+                            {% endif %}
                         </a>
-                        {% else %}
-                        <!-- Start new chat -->
-                        <a href="{% url 'unified_conversation' %}?type=direct&user_id={{ user.id }}" class="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition text-center font-medium text-sm">
-                            <i class="fas fa-plus-circle mr-1"></i>Start Chat
-                        </a>
-                        {% endif %}
                         
-                        <!-- View Profile -->
-                        <button class="flex-none sm:flex-1 px-4 py-2 border border-primary text-primary rounded-lg hover:bg-primary/10 transition text-sm font-medium flex-shrink-0">
-                            <i class="fas fa-user"></i><span class="sm:hidden ml-2">View Profile</span>
+                        <button class="flex items-center justify-center w-full py-3 border-2 border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-2xl font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-700 transition-all active:scale-95">
+                            <i class="fas fa-user-circle mr-2"></i> View Profile
                         </button>
                     </div>
                 </div>
@@ -135,43 +205,75 @@
             {% endfor %}
         </div>
         {% else %}
-        <!-- No Users Found -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
-            <i class="fas fa-search text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No users found</h2>
-            <p class="text-gray-600 dark:text-gray-400 mb-6">
-                {% if search_query %}
-                No users matching "{{ search_query }}"
-                {% elif role_filter %}
-                No {{ role_filter }}s found
-                {% else %}
-                No users available to connect with
-                {% endif %}
+        <!-- Fancy Empty State -->
+        <div class="max-w-md mx-auto py-20 text-center animate-fade-in-up">
+            <div class="relative inline-block mb-8">
+                <div class="w-32 h-32 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto">
+                    <i class="fas fa-ghost text-5xl text-slate-300 dark:text-slate-600"></i>
+                </div>
+                <div class="absolute -top-4 -right-4 w-12 h-12 bg-primary/20 rounded-full blur-xl animate-pulse"></div>
+            </div>
+            <h2 class="text-2xl font-black text-slate-900 dark:text-white mb-3">Silent Orbit...</h2>
+            <p class="text-slate-500 dark:text-slate-400 font-medium mb-8 leading-relaxed">
+                We couldn't find anyone matching that description. Try broadening your criteria or clear the filters.
             </p>
-            {% if search_query or role_filter %}
-            <a href="{% url 'user_directory' %}" class="inline-flex items-center px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition">
-                <i class="fas fa-redo mr-2"></i>Clear Filters
+            <a href="{% url 'user_directory' %}" class="inline-flex items-center px-8 py-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-2xl font-black uppercase text-xs tracking-widest hover:border-primary transition-all active:scale-95">
+                <i class="fas fa-redo mr-2"></i> Refresh Directory
             </a>
-            {% endif %}
         </div>
         {% endif %}
 
-        <!-- Network Tips -->
-        <div class="mt-12 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-6">
-            <h3 class="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-4">
-                <i class="fas fa-lightbulb mr-2"></i>Networking Tips
-            </h3>
-            <ul class="grid gap-3 md:grid-cols-2 text-sm text-blue-800 dark:text-blue-200">
-                <li><i class="fas fa-check mr-2 text-blue-600"></i>Connect with instructors to ask questions</li>
-                <li><i class="fas fa-check mr-2 text-blue-600"></i>Build study groups with fellow students</li>
-                <li><i class="fas fa-check mr-2 text-blue-600"></i>Share learning resources and tips</li>
-                <li><i class="fas fa-check mr-2 text-blue-600"></i>Get mentorship from experienced coursemates</li>
-            </ul>
+        <!-- Pro Networking Banner -->
+        <div class="mt-10 mb-20 bg-gradient-to-br from-primary/5 to-blue-500/5 border border-primary/10 dark:hover:border-primary/30 rounded-[2.5rem] p-8 sm:p-12 relative overflow-hidden group transition-all duration-500 hover:shadow-2xl">
+            <div class="absolute -bottom-20 -right-20 w-64 h-64 bg-primary/10 rounded-full blur-3xl opacity-50 group-hover:opacity-100 transition-opacity"></div>
+            
+            <div class="relative flex flex-col md:flex-row items-center gap-10">
+                <div class="flex-1 space-y-6">
+                    <div class="w-16 h-1 w-16 bg-primary rounded-full"></div>
+                    <h3 class="text-3xl font-black text-slate-900 dark:text-white leading-tight">
+                        Networking is your <br><span class="text-primary italic">Secret Superpower</span>
+                    </h3>
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-rocket text-primary mt-1"></i>
+                            <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Ask questions to your instructors</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-hand-holding-heart text-primary mt-1"></i>
+                            <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Get mentorship from seniors</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-users-viewfinder text-primary mt-1"></i>
+                            <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Build collective study groups</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-share-nodes text-primary mt-1"></i>
+                            <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Collaborate on open projects</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="w-48 h-48 sm:w-64 sm:h-64 flex-none bg-white dark:bg-slate-800 rounded-[3rem] shadow-2xl p-6 relative group-hover:rotate-3 transition-transform duration-700">
+                    <div class="w-full h-full bg-slate-50 dark:bg-slate-900 rounded-[2rem] flex flex-col items-center justify-center gap-4 text-center border border-slate-100 dark:border-slate-700">
+                        <i class="fas fa-user-astronaut text-5xl text-primary animate-bounce"></i>
+                        <p class="text-xs font-black uppercase text-slate-400 px-4">Ready to Launch?</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <style>
+    .pulse {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+        animation: pulse-green 2s infinite;
+    }
+    @keyframes pulse-green {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    }
+    /* Hide chatbot on mobile for clean UI */
     @media (max-width: 640px) {
         #chatbotToggle, #chatbotBox {
             display: none !important;
