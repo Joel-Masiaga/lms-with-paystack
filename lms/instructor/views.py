@@ -10,6 +10,11 @@ from django.views.generic import (TemplateView,
                                   DeleteView, 
                                   DetailView,
                                   View)
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.core.files.storage import default_storage
+from django.utils.text import slugify
+import os
 from courses.models import Course, Module, Lesson, Video, AdditionalMaterial, Ebook
 from quiz.models import Quiz, Question, Answer
 from quiz.forms import QuizForm, QuestionForm, AnswerFormSet
@@ -634,3 +639,28 @@ class InstructorAdditionalMaterialDeleteView(LoginRequiredMixin, UserPassesTestM
 
     def get_success_url(self):
         return reverse('instructor_lesson_detail', kwargs={'pk': self.object.lesson.pk})
+
+@csrf_exempt
+@login_required
+@user_passes_test(lambda u: u.role == 'instructor')
+def tiny_mce_upload(request):
+    """Handle image uploads from TinyMCE editor."""
+    if request.method == 'POST' and request.FILES.get('file'):
+        image_file = request.FILES.get('file')
+        
+        # Validate file type
+        allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+        if image_file.content_type not in allowed_types:
+            return JsonResponse({'error': 'Invalid file type.'}, status=400)
+            
+        # Create a unique filename to avoid conflicts
+        ext = os.path.splitext(image_file.name)[1]
+        filename = f"tinymce/{slugify(os.path.splitext(image_file.name)[0])}_{os.urandom(4).hex()}{ext}"
+        
+        # Save the file
+        file_path = default_storage.save(filename, image_file)
+        file_url = default_storage.url(file_path)
+        
+        return JsonResponse({'location': file_url})
+        
+    return JsonResponse({'error': 'Invalid request.'}, status=400)

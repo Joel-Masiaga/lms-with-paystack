@@ -346,6 +346,7 @@ TINYMCE_DEFAULT_CONFIG = {
     'file_picker_types': 'file image media',
     'automatic_uploads': True,
     'paste_data_images': True,
+    'images_upload_url': '/instructor/tinymce-upload/',
     'relative_urls': False,
     'remove_script_host': False,
     'convert_urls': True,

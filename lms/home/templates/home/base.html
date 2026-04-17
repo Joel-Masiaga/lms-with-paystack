@@ -163,6 +163,11 @@
         /* keep send button vertically centered when textarea small */
         #chatForm button { align-self: flex-end; }
 
+        /* Responsive Header Optimization */
+        @media (max-width: 400px) {
+            #themeDropdownContainer { display: none; }
+            .header-pts span { display: none; }
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -235,9 +240,9 @@
             <i class="fas fa-search text-base" id="mobileSearchIcon"></i>
         </button>
 
-        <div class="flex items-center space-x-2 sm:space-x-4">
+        <div class="flex items-center space-x-1 sm:space-x-4">
 
-            <span class="flex items-center text-yellow-500 font-semibold text-xs sm:text-sm gap-1 sm:gap-2 whitespace-nowrap">
+            <span class="header-pts flex items-center text-yellow-500 font-semibold text-xs sm:text-sm gap-1 sm:gap-2 whitespace-nowrap">
                 <i class="fas fa-medal text-base sm:text-lg"></i>
                 <span>
                     {% if user.is_authenticated %}

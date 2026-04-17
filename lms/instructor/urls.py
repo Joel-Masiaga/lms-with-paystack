@@ -39,6 +39,7 @@ from .views import (InstructorView,
                     InstructorAdditionalMaterialCreateView,
                     InstructorAdditionalMaterialUpdateView,
                     InstructorAdditionalMaterialDeleteView,
+                    tiny_mce_upload,
                     )
 
 urlpatterns = [
@@ -93,4 +94,5 @@ urlpatterns = [
     path('lesson/<int:pk>/create-material/', InstructorAdditionalMaterialCreateView.as_view(), name='create_material'),
     path('material/<int:pk>/update/', InstructorAdditionalMaterialUpdateView.as_view(), name='update_material'),
     path('material/<int:pk>/delete/', InstructorAdditionalMaterialDeleteView.as_view(), name='delete_material'),
+    path('tinymce-upload/', tiny_mce_upload, name='tiny_mce_upload'),
 ]
