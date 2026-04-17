@@ -1103,8 +1103,13 @@
         background: #00878d !important;
         color: #fff !important;
         border: none !important;
-        font-weight: 600 !important;
+        font-weight: 700 !important;
         cursor: pointer !important;
+        text-shadow: none !important;
+        -webkit-font-smoothing: antialiased !important;
+        -moz-osx-font-smoothing: grayscale !important;
+        transform: translateZ(0) !important;
+        backface-visibility: hidden !important;
       }
       .driver-popover-next-btn:hover { background: #006f74 !important; }
       .driver-popover-close-btn {
@@ -1421,9 +1426,9 @@
           doneBtnText: '🎉 Get Started!',
           overlayOpacity: 0.55,
           allowClose: true,
-          stagePadding: 8,
-          stageRadius: 10,
-          progressText: '{{current}} of {{total}}',
+          stagePadding: 6,
+          stageRadius: 12,
+          progressText: '{{current}} / {{total}}',
 
           /* Detect "Get Started" click on the last step */
           onNextClick: function (el, step) {
@@ -1442,7 +1447,10 @@
 
           onDestroyStarted: function () {
             if (mobile) closeDrawerInstant();
+            
+            // Mark as done immediately when the popover starts to destroy
             markDone();
+
             var celebrate = _tourCompleted;
             driverObj.destroy();
             if (celebrate) {
