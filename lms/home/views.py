@@ -45,7 +45,7 @@ def check_completion_and_generate_certificate(user, course, request, allow_award
 
     # Require passing the last module's quiz if it exists
     quiz_requirement_met = True
-    last_module = course.modules.order_by('created_at').last()
+    last_module = course.modules.order_by('order', 'created_at').last()
     if last_module:
         final_quiz = Quiz.objects.filter(module=last_module).first()
         if final_quiz:
@@ -170,8 +170,8 @@ class CourseDetailView(View):
             Course.objects.select_related('created_by__profile').prefetch_related(
                 models.Prefetch(
                     'modules',
-                    queryset=Module.objects.order_by('created_at').prefetch_related(
-                        models.Prefetch('lessons', queryset=Lesson.objects.order_by('created_at').only('pk', 'title'))
+                    queryset=Module.objects.order_by('order', 'created_at').prefetch_related(
+                        models.Prefetch('lessons', queryset=Lesson.objects.order_by('order', 'created_at').only('pk', 'title'))
                     ).only('pk', 'title', 'course_id')
                 )
             ),
@@ -208,7 +208,7 @@ class CourseDetailView(View):
             else:
                 messages.info(request, f'You are already enrolled in {course.title}.')
 
-            first_lesson = Lesson.objects.filter(module__course=course).order_by('module__created_at', 'created_at').first()
+            first_lesson = Lesson.objects.filter(module__course=course).order_by('module__order', 'module__created_at', 'order', 'created_at').first()
             if first_lesson:
                 return redirect('lesson_detail', pk=first_lesson.pk)
 
@@ -257,7 +257,7 @@ class ModuleDetailView(View):
     def get(self, request, pk):
         module = get_object_or_404(
             Module.objects.select_related('course').prefetch_related(
-                models.Prefetch('lessons', queryset=Lesson.objects.only('pk', 'title').order_by('created_at'))
+                models.Prefetch('lessons', queryset=Lesson.objects.only('pk', 'title').order_by('order', 'created_at'))
             ),
             pk=pk
         )
@@ -276,7 +276,7 @@ class LessonDetailView(View):
             return redirect('course_detail', pk=course.pk)
 
         # Enforce module progression: all previous module quizzes (if any) must be passed
-        ordered_modules = list(course.modules.order_by('created_at'))
+        ordered_modules = list(course.modules.order_by('order', 'created_at'))
         for m in ordered_modules:
             if m == lesson.module:
                 break
@@ -285,8 +285,8 @@ class LessonDetailView(View):
                 messages.warning(request, f"Please pass the quiz for module '{m.title}' (score 75%+) to proceed.")
                 return redirect('quiz_detail', quiz_id=q.pk)
 
-        all_course_modules = course.modules.order_by('created_at').prefetch_related(
-            models.Prefetch('lessons', queryset=Lesson.objects.order_by('created_at').only('pk', 'title')),
+        all_course_modules = course.modules.order_by('order', 'created_at').prefetch_related(
+            models.Prefetch('lessons', queryset=Lesson.objects.order_by('order', 'created_at').only('pk', 'title')),
             models.Prefetch('quizzes', queryset=Quiz.objects.only('pk', 'module_id'))
         )
 
@@ -392,7 +392,7 @@ class LessonDetailView(View):
             # Determine next step
             all_lessons_flat = list(
                 Lesson.objects.filter(module__course=course)
-                .order_by('module__created_at', 'created_at')
+                .order_by('module__order', 'module__created_at', 'order', 'created_at')
                 .values_list('pk', flat=True)
             )
             try:
@@ -400,7 +400,7 @@ class LessonDetailView(View):
                 next_id = all_lessons_flat[idx + 1] if idx < len(all_lessons_flat) - 1 else None
 
                 # If this was the last lesson in its module, gate on module quiz
-                last_in_module = (Lesson.objects.filter(module=lesson.module).order_by('created_at').last().pk == lesson.pk)
+                last_in_module = (Lesson.objects.filter(module=lesson.module).order_by('order', 'created_at').last().pk == lesson.pk)
                 if last_in_module:
                     module_quiz = lesson.module.quizzes.first()
                     if module_quiz:
@@ -416,7 +416,7 @@ class LessonDetailView(View):
                         next_url = reverse('lesson_detail', kwargs={'pk': next_id})
                     else:
                         # End of course: if last module has quiz and not passed, gate it; else go to course detail
-                        last_module = course.modules.order_by('created_at').last()
+                        last_module = course.modules.order_by('order', 'created_at').last()
                         final_quiz = Quiz.objects.filter(module=last_module).first() if last_module else None
                         if final_quiz:
                             quiz_passed = QuizAttempt.objects.filter(student=user, quiz=final_quiz, score__gte=75).exists()
@@ -449,7 +449,7 @@ class QuizDetailView(View):
         # Require all lessons in the module to be complete before taking the quiz
         if Lesson.objects.filter(module=module).exclude(read_by_users=user).exists():
             messages.warning(request, f"Complete all lessons in '{module.title}' before taking the quiz.")
-            last_unread_lesson = Lesson.objects.filter(module=module).exclude(read_by_users=user).order_by('created_at').first()
+            last_unread_lesson = Lesson.objects.filter(module=module).exclude(read_by_users=user).order_by('order', 'created_at').first()
             if last_unread_lesson:
                 return redirect('lesson_detail', pk=last_unread_lesson.pk)
             return redirect('course_detail', pk=course.pk)
@@ -546,19 +546,19 @@ class SubmitQuizView(View):
         course_just_completed = False
         if passed:
             all_lessons_read = not Lesson.objects.filter(module__course=course).exclude(read_by_users=user).exists()
-            last_module_in_course = course.modules.order_by('created_at').last()
+            last_module_in_course = course.modules.order_by('order', 'created_at').last()
             if module == last_module_in_course and all_lessons_read:
                 course_just_completed = check_completion_and_generate_certificate(user, course, request, allow_award=True)
 
         # Determine Continue target (next module's first lesson if available, else course detail)
         continue_url = reverse('course_detail', kwargs={'pk': course.pk})
         if passed:
-            ordered_module_ids = list(course.modules.order_by('created_at').values_list('pk', flat=True))
+            ordered_module_ids = list(course.modules.order_by('order', 'created_at').values_list('pk', flat=True))
             try:
                 idx = ordered_module_ids.index(module.pk)
                 if idx < len(ordered_module_ids) - 1:
                     next_module_id = ordered_module_ids[idx + 1]
-                    first_lesson_next = Lesson.objects.filter(module_id=next_module_id).order_by('created_at').first()
+                    first_lesson_next = Lesson.objects.filter(module_id=next_module_id).order_by('order', 'created_at').first()
                     if first_lesson_next:
                         continue_url = reverse('lesson_detail', kwargs={'pk': first_lesson_next.pk})
                     # If next module has no lessons, fallback remains course detail
@@ -655,12 +655,12 @@ class ReviewQuizView(View):
         # Determine Continue target (next module's first lesson if available, else course detail)
         continue_url = reverse('course_detail', kwargs={'pk': course.pk})
         if passed:
-            ordered_module_ids = list(course.modules.order_by('created_at').values_list('pk', flat=True))
+            ordered_module_ids = list(course.modules.order_by('order', 'created_at').values_list('pk', flat=True))
             try:
                 idx = ordered_module_ids.index(module.pk)
                 if idx < len(ordered_module_ids) - 1:
                     next_module_id = ordered_module_ids[idx + 1]
-                    first_lesson_next = Lesson.objects.filter(module_id=next_module_id).order_by('created_at').first()
+                    first_lesson_next = Lesson.objects.filter(module_id=next_module_id).order_by('order', 'created_at').first()
                     if first_lesson_next:
                         continue_url = reverse('lesson_detail', kwargs={'pk': first_lesson_next.pk})
             except ValueError:
@@ -1108,7 +1108,7 @@ class VerifyPaymentView(View):
                 # Redirect to first lesson if available
                 first_lesson = Lesson.objects.filter(
                     module__course=course
-                ).order_by('module__created_at', 'created_at').first()
+                ).order_by('module__order', 'module__created_at', 'order', 'created_at').first()
 
                 if first_lesson:
                     return redirect('lesson_detail', pk=first_lesson.pk)
