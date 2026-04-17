@@ -301,7 +301,7 @@ class LessonDetailView(View):
         # Prev/next lesson ids
         all_lessons_flat_pks = list(
             Lesson.objects.filter(module__course=course)
-            .order_by('module__created_at', 'created_at')
+            .order_by('module__order', 'module__created_at', 'order', 'created_at')
             .values_list('pk', flat=True)
         )
         previous_lesson = None

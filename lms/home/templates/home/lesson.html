@@ -605,45 +605,44 @@
                 {% endif %}
             </div>
 
-            <div class="flex justify-between mt-0 p-4 sm:p-8 border-t border-gray-200 dark:border-gray-700">
-                {% if previous_lesson %}
-                <a href="{% url 'lesson_detail' previous_lesson.pk %}" id="prev-lesson-btn"
-                    class="flex items-center text-primary dark:text-primary-light hover:text-primary-dark font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 rounded p-2">
-                    <i class="fas fa-chevron-left mr-2"></i> Previous
-                </a>
-                {% else %}
-                <button id="prev-lesson-btn"
-                    class="flex items-center text-gray-400 dark:text-gray-600 font-semibold cursor-not-allowed p-2"
-                    disabled>
-                    <i class="fas fa-chevron-left mr-2"></i> Previous
-                </button>
-                {% endif %}
+            <div class="max-w-5xl mx-auto px-4 sm:px-8 pb-12">
+                <div class="flex justify-between items-center py-6 border-t border-gray-200 dark:border-gray-700">
+                    {% if previous_lesson %}
+                    <a href="{% url 'lesson_detail' previous_lesson.pk %}" id="prev-lesson-btn"
+                        class="flex items-center text-primary dark:text-primary-light hover:text-primary-dark font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 rounded p-2 transition-colors">
+                        <i class="fas fa-chevron-left mr-2"></i> Previous
+                    </a>
+                    {% else %}
+                    <span id="prev-lesson-btn"
+                        class="flex items-center text-gray-400 dark:text-gray-600 font-semibold p-2 cursor-not-allowed">
+                        <i class="fas fa-chevron-left mr-2"></i> Previous
+                    </span>
+                    {% endif %}
 
-                {% if next_lesson %}
-                <a href="{% url 'lesson_detail' next_lesson.pk %}" id="next-lesson-btn"
-                    class="flex items-center text-primary dark:text-primary-light hover:text-primary-dark font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 rounded p-2">
-                    Next Lesson <i class="fas fa-chevron-right ml-2"></i>
-                </a>
-                {% else %}
-                {% with quiz=lesson.module.quizzes.first %}
-                {% if quiz %}
-                <a href="{% url 'quiz_detail' quiz.id %}" id="next-lesson-btn"
-                    class="flex items-center bg-yellow-500 hover:bg-yellow-600 text-white font-semibold rounded p-2 px-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-yellow-500 dark:focus-visible:ring-offset-gray-800">
-                    Take Quiz <i class="fas fa-question-circle ml-2"></i>
-                </a>
-                {% else %}
-                <button id="next-lesson-btn"
-                    class="flex items-center text-gray-400 dark:text-gray-600 font-semibold cursor-not-allowed p-2"
-                    disabled>
-                    Next Lesson <i class="fas fa-chevron-right ml-2"></i>
-                </button>
-                {% endif %}
-                {% endwith %}
-                {% endif %}
+                    {% if next_lesson %}
+                    <a href="{% url 'lesson_detail' next_lesson.pk %}" id="next-lesson-btn"
+                        class="flex items-center text-primary dark:text-primary-light hover:text-primary-dark font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary dark:focus-visible:ring-offset-gray-800 rounded p-2 transition-colors">
+                        Next Lesson <i class="fas fa-chevron-right ml-2"></i>
+                    </a>
+                    {% else %}
+                    {% with quiz=lesson.module.quizzes.first %}
+                    {% if quiz %}
+                    <a href="{% url 'quiz_detail' quiz.id %}" id="next-lesson-btn"
+                        class="flex items-center bg-yellow-500 hover:bg-yellow-600 text-white font-semibold rounded p-2 px-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-yellow-500 dark:focus-visible:ring-offset-gray-800 shadow-sm transition-transform hover:scale-105 active:scale-95">
+                        Take Quiz <i class="fas fa-question-circle ml-2"></i>
+                    </a>
+                    {% else %}
+                    <span id="next-lesson-btn"
+                        class="flex items-center text-gray-400 dark:text-gray-600 font-semibold p-2 cursor-not-allowed">
+                        Next Lesson <i class="fas fa-chevron-right ml-2"></i>
+                    </span>
+                    {% endif %}
+                    {% endwith %}
+                    {% endif %}
+                </div>
             </div>
+        </main>
     </div>
-    </main>
-</div>
 </div>
 {% endblock %}
 
