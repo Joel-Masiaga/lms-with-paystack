@@ -24,7 +24,7 @@ class Course(models.Model):
 
     title = models.CharField(max_length=200)
     description = HTMLField(blank=True, null=True)  # Replaced CKEditor with TinyMCE
-    objectives = models.TextField(blank=True, null=True)
+    objectives = HTMLField(blank=True, null=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'role': 'instructor'})
     enrolled_students = models.ManyToManyField(User, related_name='enrolled_courses', through='Enrollment', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -88,7 +88,7 @@ class Lesson(models.Model):
     module = models.ForeignKey(Module, on_delete=models.CASCADE, related_name='lessons')
     title = models.CharField(max_length=200)
     description = HTMLField(blank=True, null=True)
-    objectives = models.TextField(blank=True, null=True)
+    objectives = HTMLField(blank=True, null=True)
     image_content = models.ImageField(upload_to='lesson_images/', blank=True, null=True)
     content = HTMLField(blank=True, null=True)
     read_by_users = models.ManyToManyField(User, related_name='read_lessons', blank=True)

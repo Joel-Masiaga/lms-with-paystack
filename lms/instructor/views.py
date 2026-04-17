@@ -18,7 +18,9 @@ import os
 from courses.models import Course, Module, Lesson, Video, AdditionalMaterial, Ebook
 from quiz.models import Quiz, Question, Answer
 from quiz.forms import QuizForm, QuestionForm, AnswerFormSet
-from courses.forms import VideoForm, AdditionalMaterialForm, VideoInlineFormSet, AdditionalMaterialInlineFormSet
+from courses.forms import (CourseForm, ModuleForm, LessonForm, 
+                           VideoForm, AdditionalMaterialForm, 
+                           VideoInlineFormSet, AdditionalMaterialInlineFormSet)
 from django.db import models
 
 
@@ -114,7 +116,7 @@ class InstructorCourseListView(LoginRequiredMixin, UserPassesTestMixin, ListView
     
 class  InstructorCourseCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Course
-    fields = ['title', 'description', 'objectives', 'image', 'category', 'is_premium', 'actual_price', 'subsidized_price']
+    form_class = CourseForm
     template_name = "instructor/course_form.html"
 
     def form_valid(self, form):
@@ -139,7 +141,7 @@ class InstructorCourseDetailView(LoginRequiredMixin, UserPassesTestMixin, Detail
 
 class InstructorCourseUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Course
-    fields = ['title', 'description', 'objectives', 'image', 'category', 'is_premium', 'actual_price', 'subsidized_price']
+    form_class = CourseForm
     template_name = "instructor/course_update_form.html"
 
     def form_valid(self, form):
@@ -199,7 +201,7 @@ class InstructorModuleDetailView(LoginRequiredMixin, UserPassesTestMixin, Detail
 
 class InstructorModuleCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Module
-    fields = ['title', 'description', 'course']
+    form_class = ModuleForm
     template_name = "instructor/module_form.html"
 
     def form_valid(self, form):
@@ -221,7 +223,7 @@ class InstructorModuleCreateView(LoginRequiredMixin, UserPassesTestMixin, Create
     
 class InstructorModuleUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Module
-    fields = ['title', 'description', 'course']
+    form_class = ModuleForm
     template_name = "instructor/module_update_form.html"
 
     def form_valid(self, form):
@@ -276,7 +278,7 @@ class InstructorLessonListView(LoginRequiredMixin, UserPassesTestMixin, ListView
 
 class InstructorLessonCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Lesson
-    fields = ['module', 'title', 'description', 'objectives', 'image_content', 'content', 'pdf_file']
+    form_class = LessonForm
     template_name = "instructor/lesson_form.html"
 
     def get_context_data(self, **kwargs):
@@ -327,7 +329,7 @@ class InstructorLessonDetailView(LoginRequiredMixin, UserPassesTestMixin, Detail
     
 class InstructorLessonUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Lesson
-    fields = ['module', 'title', 'description', 'objectives', 'image_content', 'content', 'pdf_file']
+    form_class = LessonForm
     template_name = "instructor/lesson_update_form.html"
 
     def get_context_data(self, **kwargs):
