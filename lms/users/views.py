@@ -56,6 +56,7 @@ def register(request):
             # Send verification email with OTP
             send_verification_email(request, user, email_verification)
             
+            request.session['pending_verification_email'] = user.email
             messages.success(request, f"Registration successful! A verification code has been sent to {user.email}. Please check your email.")
             return redirect('verify_email_pending')
     else:
@@ -79,6 +80,7 @@ def custom_login(request):
             if user is not None:
                 # Check if email is verified
                 if not user.is_email_verified:
+                    request.session['pending_verification_email'] = user.email
                     messages.warning(request, f"Please verify your email first. Check {user.email} for the verification code.")
                     return redirect('verify_email_pending')
                 
@@ -185,14 +187,20 @@ def verify_email_pending(request):
     if request.user.is_authenticated and request.user.is_email_verified:
         return redirect('home')
     
+    # Try to determine the email from context
+    email = None
+    if request.user.is_authenticated:
+        email = request.user.email
+    else:
+        email = request.session.get('pending_verification_email')
+    
+    if not email:
+        messages.error(request, 'Please identify yourself to verify your email.')
+        return redirect('resend_verification')
+
     # Handle OTP submission
     if request.method == 'POST':
         otp = request.POST.get('otp', '').strip()
-        email = request.POST.get('email', '').strip()
-        
-        if not email:
-            messages.error(request, 'Please provide your email address.')
-            return render(request, 'users/verify_email_pending.html')
         
         try:
             user = User.objects.get(email=email)
@@ -207,6 +215,10 @@ def verify_email_pending(request):
                 return redirect('resend_verification')
             
             if email_verification.verify_otp(otp):
+                # Clear session variable on success
+                if 'pending_verification_email' in request.session:
+                    del request.session['pending_verification_email']
+
                 if request.user.is_authenticated and request.user.email == user.email:
                     messages.success(request, 'Email verified successfully! Welcome.')
                     return redirect('home')
@@ -218,11 +230,12 @@ def verify_email_pending(request):
                 return render(request, 'users/verify_email_pending.html', {'email': email})
         
         except User.DoesNotExist:
-            messages.error(request, 'No account found with that email address.')
+            messages.error(request, 'No account found for this verification request.')
+            return redirect('resend_verification')
         except Exception as e:
             messages.error(request, f'An error occurred: {str(e)}')
     
-    return render(request, 'users/verify_email_pending.html')
+    return render(request, 'users/verify_email_pending.html', {'email': email})
 
 def verify_email(request, token=None):
     """Legacy route - redirect to OTP verification"""
@@ -249,6 +262,7 @@ def resend_verification_email(request):
             
             # Send verification email with new OTP
             if send_verification_email(request, user, email_verification):
+                request.session['pending_verification_email'] = email
                 messages.success(request, f'Verification code sent to {email}. Please check your inbox.')
             else:
                 messages.error(request, 'Failed to send verification code. Please try again.')
