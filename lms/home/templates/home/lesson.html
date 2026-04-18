@@ -508,9 +508,12 @@
                     </div>
                     {% endif %}
 
+                    {% if lesson.objectives %}
+                    <h5 class="mb-4 text-lg sm:text-xl font-semibold text-gray-900 dark:text-white not-prose">🎯 Learning Objectives</h5>
                     <div class="prose dark:prose-invert prose-sm max-w-none text-gray-800 dark:text-gray-200 mb-6 bg-gray-50 dark:bg-gray-700/50 p-5 sm:p-6 rounded-xl border border-gray-100 dark:border-gray-600">
                         {{ lesson.objectives|safe }}
                     </div>
+                    {% endif %}
 
                     {% if lesson.content %}
                     <h5 class="mb-4 text-lg sm:text-xl font-semibold text-gray-900 dark:text-white not-prose">📖 Lesson

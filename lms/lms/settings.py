@@ -338,8 +338,45 @@ TINYMCE_DEFAULT_CONFIG = {
     'content_css': [
         'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
         'https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/katex.min.css',
-        'https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.0.0/mermaid.min.css',
-        'data:text/css;charset=UTF-8,.mce-accordion { border: 1px solid #ccc; margin-bottom: 10px; } .mce-accordion-title { background-color: #f0f0f0; padding: 10px; cursor: pointer; } .mce-accordion-content { padding: 10px; display: none; } .mce-flipcard { width: 200px; height: 150px; perspective: 1000px; } .mce-flipcard-inner { position: relative; width: 100%; height: 100%; transition: transform 0.8s; transform-style: preserve-3d; } .mce-flipcard-front, .mce-flipcard-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; } .mce-flipcard-back { transform: rotateY(180deg); }'
+        'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
+        'data:text/css;charset=UTF-8,.content-callout { padding: 1.25rem; margin-bottom: 1.5rem; border-left: 4px solid; border-radius: 0.5rem; font-family: "Inter", sans-serif; } .callout-blue { background-color: #eff6ff; border-color: #3b82f6; } .callout-amber { background-color: #fffbeb; border-color: #f59e0b; } .callout-purple { background-color: #f5f3ff; border-color: #8b5cf6; } .callout-label { display: inline-block; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; padding: 2px 6px; border-radius: 4px; background: rgba(0,0,0,0.05); } .instructor-step-list { list-style: none !important; padding-left: 0 !important; counter-reset: step-counter; } .instructor-step-list li { position: relative; padding-left: 3.5rem; margin-bottom: 1.25rem; min-height: 2.5rem; display: flex; align-items: center; } .instructor-step-list li::before { counter-increment: step-counter; content: counter(step-counter); position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 2.5rem; height: 2.5rem; background-color: #00878d; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; } .instructor-step-list.list-purple li::before { background-color: #8b5cf6; } .instructor-step-list.list-green li::before { background-color: #10b981; }'
+    ],
+    'style_formats': [
+        {'title': 'Callout Boxes', 'items': [
+            {'title': 'Blue Callout (Description)', 'block': 'div', 'classes': 'content-callout callout-blue', 'wrapper': True},
+            {'title': 'Amber Callout (Key Concept)', 'block': 'div', 'classes': 'content-callout callout-amber', 'wrapper': True},
+            {'title': 'Purple Callout (Definition)', 'block': 'div', 'classes': 'content-callout callout-purple', 'wrapper': True},
+        ]},
+        {'title': 'Step Lists', 'items': [
+            {'title': 'Standard Step List (Teal)', 'selector': 'ol', 'classes': 'instructor-step-list'},
+            {'title': 'Green Step List', 'selector': 'ol', 'classes': 'instructor-step-list list-green'},
+            {'title': 'Purple Step List', 'selector': 'ol', 'classes': 'instructor-step-list list-purple'},
+        ]},
+        {'title': 'Labels', 'items': [
+            {'title': 'Content Label', 'inline': 'span', 'classes': 'callout-label'},
+        ]}
+    ],
+    'templates': [
+        {
+            'title': 'Key Concept Box', 
+            'description': 'A styled box for key concepts.', 
+            'content': '<div class="content-callout callout-amber"><span class="callout-label">Key Concept</span><p>Explain the key concept here...</p></div>'
+        },
+        {
+            'title': 'Definition Box', 
+            'description': 'A purple styled box for definitions.', 
+            'content': '<div class="content-callout callout-purple"><span class="callout-label">Definition</span><p><strong>Term:</strong> Definition goes here...</p></div>'
+        },
+        {
+            'title': 'Lesson Summary Box', 
+            'description': 'A blue styled box for summaries.', 
+            'content': '<div class="content-callout callout-blue"><span class="callout-label">Lesson Summary</span><p>Summarize the main points here...</p></div>'
+        },
+        {
+            'title': 'Numbered Steps Section', 
+            'description': 'A list of numbered steps.', 
+            'content': '<ol class="instructor-step-list"><li>Step one content...</li><li>Step two content...</li></ol>'
+        },
     ],
     'image_advtab': True,
     'image_caption': True,

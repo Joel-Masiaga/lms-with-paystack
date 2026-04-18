@@ -115,59 +115,77 @@
             color: white;
          }
 
-        /* --- 5. LMS/COURSE SPECIFIC STYLES --- */
-        .slide { display: none; }
-        .slide.active { display: block; }
-        .slide-nav:disabled { opacity: 0.3; cursor: not-allowed; }
+        /* --- 7. PREMIUM CONTENT COMPONENTS --- */
+        .content-callout {
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            border-left-width: 4px;
+            border-left-style: solid;
+            border-radius: 0.5rem;
+            position: relative;
+        }
+        .callout-blue { background-color: #eff6ff; border-color: #3b82f6; }
+        .dark .callout-blue { background-color: #1e3a8a/20; border-color: #3b82f6; }
+        
+        .callout-amber { background-color: #fffbeb; border-color: #f59e0b; }
+        .dark .callout-amber { background-color: #451a03/20; border-color: #f59e0b; }
+        
+        .callout-purple { background-color: #f5f3ff; border-color: #8b5cf6; }
+        .dark .callout-purple { background-color: #2e1065/20; border-color: #8b5cf6; }
 
-        /* Notes panel open/closed transition - pages may rely on this */
-        #notes-panel {
-            max-height: 0;
-            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow: hidden;
-        }
-        #notes-panel.notes-open { max-height: 20rem; }
-        @media (min-width: 768px) { #notes-panel.notes-open { max-height: 16rem; } }
-
-        /* --- 6. DASHBOARD SPECIFIC STYLES --- */
-        .progress-bar {
-            height: 8px; background-color: #e2e8f0; border-radius: 9999px; overflow: hidden;
-        }
-        .progress-bar-fill {
-            height: 100%; background-color: var(--color-primary); border-radius: 9999px; transition: width 0.3s ease-in-out;
-        }
-        .progress-bar-sm { height: 6px; }
-
-        /* Additional style to ensure body takes height */
-        html, body {
-            height: 100%;
-            overflow: hidden; /* Prevent double scrollbars */
-        }
-        #app-content {
-            height: calc(100vh - 4rem); /* Adjust based on header height */
-        }
-        main {
-            height: 100%;
+        .callout-label {
+            display: inline-block;
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(0,0,0,0.05);
+            color: inherit;
+            opacity: 0.8;
         }
 
-         #chatForm { align-items: flex-end; } /* override if form uses items-center */
-        #chatForm textarea {
-            min-height: 40px;
-            max-height: 120px;
-            line-height: 1.25;
-            padding-top: 0.5rem;
-            padding-bottom: 0.5rem;
-            box-sizing: border-box;
-            overflow: auto;
+        /* Styled Step List */
+        .instructor-step-list {
+            list-style: none !important;
+            padding-left: 0 !important;
+            counter-reset: step-counter;
         }
-        /* keep send button vertically centered when textarea small */
-        #chatForm button { align-self: flex-end; }
+        .instructor-step-list li {
+            position: relative;
+            padding-left: 3.5rem;
+            margin-bottom: 1.25rem;
+            min-height: 2.5rem;
+            display: flex;
+            align-items: center;
+        }
+        .instructor-step-list li::before {
+            counter-increment: step-counter;
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 2.5rem;
+            height: 2.5rem;
+            background-color: var(--color-primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.125rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .instructor-step-list.list-purple li::before { background-color: #8b5cf6; }
+        .instructor-step-list.list-green li::before { background-color: #10b981; }
+        .instructor-step-list.list-amber li::before { background-color: #f59e0b; }
 
-        /* Responsive Header Optimization */
-        @media (max-width: 400px) {
-            #themeDropdownContainer { display: none; }
-            .header-pts span { display: none; }
-        }
+        /* Typography spacing for rich content */
+        .prose .content-callout p:last-child { margin-bottom: 0; }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
