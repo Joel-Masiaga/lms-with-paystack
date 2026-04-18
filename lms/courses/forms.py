@@ -19,9 +19,9 @@ class ModuleForm(forms.ModelForm):
         fields = ['title', 'description', 'course']
 
 class LessonForm(forms.ModelForm):
-    description = forms.CharField(widget=TinyMCE())
-    objectives = forms.CharField(widget=TinyMCE()) 
-    content = forms.CharField(widget=TinyMCE())
+    description = forms.CharField(widget=TinyMCE(), required=False)
+    objectives = forms.CharField(widget=TinyMCE(), required=False) 
+    content = forms.CharField(widget=TinyMCE(), required=False)
 
     class Meta:
         model = Lesson

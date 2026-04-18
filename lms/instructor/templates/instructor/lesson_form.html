@@ -40,13 +40,24 @@
     <nav class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-5">
         <a href="{% url 'instructor_course_list' %}" class="hover:text-primary"><i class="fas fa-chalkboard-teacher mr-1"></i>Courses</a>
         <i class="fas fa-chevron-right text-[10px]"></i>
+        {% if selected_module %}
+        <a href="{% url 'instructor_course_detail' selected_module.course.pk %}" class="hover:text-primary">{{ selected_module.course.title }}</a>
+        <i class="fas fa-chevron-right text-[10px]"></i>
+        <span class="text-gray-400">{{ selected_module.title }}</span>
+        <i class="fas fa-chevron-right text-[10px]"></i>
+        {% endif %}
         <span class="text-gray-700 dark:text-gray-300 font-medium">New Lesson</span>
     </nav>
 
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
         <div class="px-5 sm:px-6 py-5 border-b border-gray-100 dark:border-gray-700">
             <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <i class="fas fa-plus-circle text-primary"></i> Create Lesson
+                <i class="fas fa-plus-circle text-primary"></i> 
+                {% if selected_module %}
+                Add Lesson to <span class="text-primary">{{ selected_module.title }}</span>
+                {% else %}
+                Create Lesson
+                {% endif %}
             </h1>
         </div>
 
@@ -55,6 +66,15 @@
             
             <!-- Core Lesson Details -->
             <div class="space-y-5">
+                {% if selected_module %}
+                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl p-4 flex items-start gap-3 mb-6">
+                    <i class="fas fa-info-circle text-blue-500 mt-0.5"></i>
+                    <div class="text-sm text-blue-700 dark:text-blue-300">
+                        <p class="font-bold">Module Pre-selected</p>
+                        <p>You are adding a lesson to <span class="font-semibold">{{ selected_module.title }}</span> under the course <span class="font-semibold">{{ selected_module.course.title }}</span>.</p>
+                    </div>
+                </div>
+                {% endif %}
                 <h3 class="text-lg font-bold text-gray-900 dark:text-white border-l-4 border-primary pl-3">Lesson Details</h3>
                 {% for field in form %}
                 <div>

@@ -281,8 +281,31 @@ class InstructorLessonCreateView(LoginRequiredMixin, UserPassesTestMixin, Create
     form_class = LessonForm
     template_name = "instructor/lesson_form.html"
 
+    def get_initial(self):
+        initial = super().get_initial()
+        module_id = self.kwargs.get('pk')
+        if module_id:
+            initial['module'] = module_id
+        return initial
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Filter modules to only show those owned by the instructor
+        form.fields['module'].queryset = Module.objects.filter(course__created_by=self.request.user)
+        
+        # Explicitly set initial value again after filtering
+        module_id = self.kwargs.get('pk')
+        if module_id:
+            form.fields['module'].initial = module_id
+            
+        return form
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        module_id = self.kwargs.get('pk')
+        if module_id:
+            context['selected_module'] = get_object_or_404(Module, id=module_id)
+            
         if self.request.POST:
             context['video_formset'] = VideoInlineFormSet(self.request.POST, prefix='videos')
             context['material_formset'] = AdditionalMaterialInlineFormSet(self.request.POST, prefix='materials')

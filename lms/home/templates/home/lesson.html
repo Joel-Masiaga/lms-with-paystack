@@ -294,9 +294,18 @@
     /* keep other existing desktop styles intact */
 
     /* Responsive Prose & Content Fixes */
-    .prose img, .prose iframe, .prose video, .prose table {
+    .prose img, .prose video, .prose table {
         max-width: 100% !important;
         height: auto !important;
+    }
+    .prose iframe {
+        max-width: 100% !important;
+    }
+    
+    /* Fix for video display: ensure iframe fills the aspect-video container */
+    .aspect-video iframe {
+        height: 100% !important;
+        width: 100% !important;
     }
     .prose table {
         display: block;
@@ -493,6 +502,7 @@
                     </div>
                 </div>
 
+
                 <div class="p-4 sm:p-8 prose dark:prose-invert max-w-none">
                     {% if lesson.image_content %}
                     <img src="{{ lesson.image_content.url }}"
@@ -542,6 +552,7 @@
                     {% endfor %}
                     <hr class="border-gray-200 dark:border-gray-700 my-6">
                     {% endif %}
+
 
                     {# PDF viewer block: page-by-page rendering with PDF.js (no direct download link) #}
                     {% if lesson.pdf_file %}
