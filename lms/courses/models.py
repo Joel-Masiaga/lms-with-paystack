@@ -95,6 +95,7 @@ class Lesson(models.Model):
     order = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     pdf_file = models.FileField(upload_to='lesson_pdfs/', storage=get_raw_storage, blank=True, null=True)
+    estimated_duration = models.PositiveIntegerField(default=5, help_text="Estimated time to complete this lesson in minutes.")
 
     def __str__(self):
         return f"{self.module.course.title} - {self.module.title} - {self.title}"

@@ -195,7 +195,7 @@
                             {% for lesson in module.lessons.all %}
                                 <li>
                                     <a href="{% url 'lesson_detail' lesson.pk %}" class="hover:text-primary dark:hover:text-primary-light dark:text-primary-light dark:hover:text-primary-light">
-                                        {{ lesson.title }}
+                                        {{ lesson.title }} <span class="text-xs text-gray-500 ml-1">({{ lesson.estimated_duration }} mins)</span>
                                     </a>
                                 </li>
                             {% empty %}

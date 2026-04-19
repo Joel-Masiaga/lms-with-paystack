@@ -25,7 +25,7 @@ class LessonForm(forms.ModelForm):
 
     class Meta:
         model = Lesson
-        fields = ['module', 'title', 'description', 'objectives', 'image_content', 'content', 'pdf_file']
+        fields = ['module', 'title', 'description', 'objectives', 'image_content', 'content', 'pdf_file', 'estimated_duration']
 
 class NoteForm(forms.ModelForm):
     content = forms.CharField(

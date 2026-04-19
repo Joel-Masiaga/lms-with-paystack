@@ -386,7 +386,7 @@
                                     </span>
                                     <div class="ml-3 truncate">
                                         <span class="block font-medium text-sm {% if lesson_item.id == lesson.id %}text-primary dark:text-primary-light{% else %}text-gray-800 dark:text-gray-300{% endif %} truncate group-hover:text-primary dark:group-hover:text-primary-light dark:hover:text-primary-light dark:text-primary-light dark:group-hover:text-primary-light transition-colors">{{ lesson_item.title }}</span>
-                                        <span class="block text-xs text-gray-500 dark:text-gray-400">Est. 5:00</span>
+                                        <span class="block text-xs text-gray-500 dark:text-gray-400">{{ lesson_item.estimated_duration }} mins</span>
                                     </div>
                                 </div>
                                 {% if lesson_item.id in read_lesson_ids %}
@@ -460,7 +460,7 @@
                                     data-lesson-id="{{ lesson_item.id }}">
                                     <div>
                                         <div class="font-medium">{{ lesson_item.title }}</div>
-                                        <div class="meta">Est. 5:00</div>
+                                        <div class="meta">{{ lesson_item.estimated_duration }} mins</div>
                                     </div>
                                     <div>
                                         {% if lesson_item.id in read_lesson_ids %}
